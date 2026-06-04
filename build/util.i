@@ -4536,6 +4536,13 @@ uint16_t EE_ReadVariable(uint16_t VirtAddress, uint16_t* Data);
 uint16_t EE_WriteVariable(uint16_t VirtAddress, uint16_t Data);
 # 29 "Src/util.c" 2
 # 1 "Inc/util.h" 1
+# 38 "Inc/util.h"
+    typedef struct{
+      uint16_t start;
+      int16_t steer;
+      int16_t speed;
+      uint16_t checksum;
+    } SerialCommand;
 # 59 "Inc/util.h"
 typedef struct {
   int16_t raw;
@@ -4575,7 +4582,17 @@ void handleTimeout(void);
 void readCommand(void);
 void usart2_rx_check(void);
 void usart3_rx_check(void);
-# 108 "Inc/util.h"
+
+
+
+
+void usart_process_command(SerialCommand *command_in, SerialCommand *command_out, uint8_t usart_idx);
+
+
+
+
+
+
 void sideboardLeds(uint8_t *leds);
 void sideboardSensors(uint8_t sensors);
 
@@ -5065,6 +5082,17 @@ static int16_t INPUT_MIN;
 
 
 static uint16_t timeoutCntADC = 100;
+# 158 "Src/util.c"
+static uint8_t rx_buffer_R[64];
+static uint32_t rx_buffer_R_len = (uint32_t)(sizeof(rx_buffer_R) / sizeof(*(rx_buffer_R)));
+
+
+static uint16_t timeoutCntSerial_R = 160;
+static uint8_t timeoutFlgSerial_R = 0;
+# 181 "Src/util.c"
+static SerialCommand commandR;
+static SerialCommand commandR_raw;
+static uint32_t commandR_len = sizeof(commandR);
 # 195 "Src/util.c"
 static uint8_t brakePressed;
 # 232 "Src/util.c"
@@ -5115,7 +5143,17 @@ void Input_Lim_Init(void) {
 void Input_Init(void) {
 # 289 "Src/util.c"
     UART3_Init();
-# 301 "Src/util.c"
+
+
+
+
+
+
+    HAL_UART_Receive_DMA(&huart3, (uint8_t *)rx_buffer_R, sizeof(rx_buffer_R));
+    UART_DisableRxErrors(&huart3);
+
+
+
     uint16_t writeCheck, readVal;
     HAL_FLASH_Unlock();
     EE_Init();
@@ -5165,7 +5203,17 @@ void Input_Init(void) {
     HAL_FLASH_Lock();
 # 399 "Src/util.c"
 }
-# 419 "Src/util.c"
+# 409 "Src/util.c"
+void UART_DisableRxErrors(UART_HandleTypeDef *huart)
+{
+  ((huart->Instance->CR1) &= ~((0x1U << (8U))));
+  ((huart->Instance->CR3) &= ~((0x1U << (0U))));
+}
+
+
+
+
+
 void poweronMelody(void) {
     buzzerCount = 0;
     for (int i = 8; i >= 0; i--) {
@@ -5483,6 +5531,19 @@ void readInputRaw(void) {
         input2[inIdx].raw = adc_buffer.l_rx2;
 
     }
+# 871 "Src/util.c"
+    if (inIdx == 0) {
+
+
+
+
+
+
+
+        input1[inIdx].raw = commandR.steer;
+        input2[inIdx].raw = commandR.speed;
+
+    }
 # 938 "Src/util.c"
 }
 
@@ -5504,6 +5565,18 @@ void handleTimeout(void) {
         }
       }
     }
+# 984 "Src/util.c"
+      if (timeoutCntSerial_R++ >= 160) {
+        timeoutFlgSerial_R = 1;
+        timeoutCntSerial_R = 160;
+
+
+
+      } else {
+# 1000 "Src/util.c"
+      }
+
+        timeoutFlgSerial = timeoutFlgSerial_R;
 # 1032 "Src/util.c"
     if (timeoutFlgADC || timeoutFlgSerial || timeoutFlgGen) {
       ctrlModReq = 0;
@@ -5568,7 +5641,56 @@ void usart2_rx_check(void)
 void usart3_rx_check(void)
 {
   HAL_Delay(2);
-# 1221 "Src/util.c"
+
+  static uint32_t old_pos;
+  uint32_t pos;
+  pos = rx_buffer_R_len - ((huart3.hdmarx)->Instance->CNDTR);
+# 1180 "Src/util.c"
+  uint8_t *ptr;
+  if (pos != old_pos) {
+    ptr = (uint8_t *)&commandR_raw;
+    if (pos > old_pos && (pos - old_pos) == commandR_len) {
+      memcpy(ptr, &rx_buffer_R[old_pos], commandR_len);
+      usart_process_command(&commandR_raw, &commandR, 3);
+    } else if ((rx_buffer_R_len - old_pos + pos) == commandR_len) {
+      memcpy(ptr, &rx_buffer_R[old_pos], rx_buffer_R_len - old_pos);
+      if (pos > 0) {
+        ptr += rx_buffer_R_len - old_pos;
+        memcpy(ptr, &rx_buffer_R[0], pos);
+      }
+      usart_process_command(&commandR_raw, &commandR, 3);
+    }
+  }
+# 1216 "Src/util.c"
+  old_pos = pos;
+  if (old_pos == rx_buffer_R_len) {
+    old_pos = 0;
+  }
+
+}
+# 1270 "Src/util.c"
+void usart_process_command(SerialCommand *command_in, SerialCommand *command_out, uint8_t usart_idx)
+{
+# 1295 "Src/util.c"
+  uint16_t checksum;
+  if (command_in->start == 0xABCD) {
+    checksum = (uint16_t)(command_in->start ^ command_in->steer ^ command_in->speed);
+    if (command_in->checksum == checksum) {
+      *command_out = *command_in;
+      if (usart_idx == 2) {
+
+
+
+
+      } else if (usart_idx == 3) {
+
+        timeoutFlgSerial_R = 0;
+        timeoutCntSerial_R = 0;
+
+      }
+    }
+  }
+
 }
 # 1352 "Src/util.c"
 void sideboardLeds(uint8_t *leds) {
