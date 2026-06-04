@@ -1725,6 +1725,12 @@ void BLDC_controller_step(RT_MODEL *const rtM)
                       rtP->t_errDequal, &rtDW->Merge_p, &rtDW->Debounce_Filter_k);
 
       /* End of Outputs for SubSystem: '<S20>/Debounce_Filter' */
+    extern P rtP_Right;
+      if (rtP == &rtP_Right){//qgb
+    //if (rtP != &rtP_Left) {
+          rtDW->Merge_p = false;  // 强行把右轮的霍尔错误信号抹除掉
+      }
+      // ===================================================
 
       /* Outputs for Atomic SubSystem: '<S20>/either_edge' */
       either_edge(rtDW->Merge_p, &rtb_RelationalOperator1_mv,
