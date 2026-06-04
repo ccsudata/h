@@ -5087,7 +5087,7 @@ static uint8_t rx_buffer_R[64];
 static uint32_t rx_buffer_R_len = (uint32_t)(sizeof(rx_buffer_R) / sizeof(*(rx_buffer_R)));
 
 
-static uint16_t timeoutCntSerial_R = 160;
+static uint16_t timeoutCntSerial_R = 1600;
 static uint8_t timeoutFlgSerial_R = 0;
 # 181 "Src/util.c"
 static SerialCommand commandR;
@@ -5566,9 +5566,9 @@ void handleTimeout(void) {
       }
     }
 # 984 "Src/util.c"
-      if (timeoutCntSerial_R++ >= 160) {
+      if (timeoutCntSerial_R++ >= 1600) {
         timeoutFlgSerial_R = 1;
-        timeoutCntSerial_R = 160;
+        timeoutCntSerial_R = 1600;
 
 
 
