@@ -4536,19 +4536,7 @@ uint16_t EE_ReadVariable(uint16_t VirtAddress, uint16_t* Data);
 uint16_t EE_WriteVariable(uint16_t VirtAddress, uint16_t Data);
 # 29 "Src/util.c" 2
 # 1 "Inc/util.h" 1
-# 47 "Inc/util.h"
-    typedef struct{
-      uint16_t start;
-      int16_t pitch;
-      int16_t dPitch;
-      int16_t cmd1;
-      int16_t cmd2;
-      uint16_t sensors;
-      uint16_t checksum;
-    } SerialSideboard;
-
-
-
+# 59 "Inc/util.h"
 typedef struct {
   int16_t raw;
   int16_t cmd;
@@ -4587,17 +4575,7 @@ void handleTimeout(void);
 void readCommand(void);
 void usart2_rx_check(void);
 void usart3_rx_check(void);
-
-
-
-
-
-
-
-void usart_process_sideboard(SerialSideboard *Sideboard_in, SerialSideboard *Sideboard_out, uint8_t usart_idx);
-
-
-
+# 108 "Inc/util.h"
 void sideboardLeds(uint8_t *leds);
 void sideboardSensors(uint8_t sensors);
 
@@ -5087,18 +5065,6 @@ static int16_t INPUT_MIN;
 
 
 static uint16_t timeoutCntADC = 100;
-# 158 "Src/util.c"
-static uint8_t rx_buffer_R[64];
-static uint32_t rx_buffer_R_len = (uint32_t)(sizeof(rx_buffer_R) / sizeof(*(rx_buffer_R)));
-
-
-static uint16_t timeoutCntSerial_R = 160;
-static uint8_t timeoutFlgSerial_R = 0;
-
-
-SerialSideboard Sideboard_R;
-SerialSideboard Sideboard_R_raw;
-static uint32_t Sideboard_R_len = sizeof(Sideboard_R);
 # 195 "Src/util.c"
 static uint8_t brakePressed;
 # 232 "Src/util.c"
@@ -5149,17 +5115,7 @@ void Input_Lim_Init(void) {
 void Input_Init(void) {
 # 289 "Src/util.c"
     UART3_Init();
-
-
-
-
-
-
-    HAL_UART_Receive_DMA(&huart3, (uint8_t *)rx_buffer_R, sizeof(rx_buffer_R));
-    UART_DisableRxErrors(&huart3);
-
-
-
+# 301 "Src/util.c"
     uint16_t writeCheck, readVal;
     HAL_FLASH_Unlock();
     EE_Init();
@@ -5209,17 +5165,7 @@ void Input_Init(void) {
     HAL_FLASH_Lock();
 # 399 "Src/util.c"
 }
-# 409 "Src/util.c"
-void UART_DisableRxErrors(UART_HandleTypeDef *huart)
-{
-  ((huart->Instance->CR1) &= ~((0x1U << (8U))));
-  ((huart->Instance->CR3) &= ~((0x1U << (0U))));
-}
-
-
-
-
-
+# 419 "Src/util.c"
 void poweronMelody(void) {
     buzzerCount = 0;
     for (int i = 8; i >= 0; i--) {
@@ -5537,11 +5483,6 @@ void readInputRaw(void) {
         input2[inIdx].raw = adc_buffer.l_rx2;
 
     }
-# 892 "Src/util.c"
-    if (inIdx == 1) {
-      input1[inIdx].raw = Sideboard_R.cmd1;
-      input2[inIdx].raw = Sideboard_R.cmd2;
-    }
 # 938 "Src/util.c"
 }
 
@@ -5563,24 +5504,6 @@ void handleTimeout(void) {
         }
       }
     }
-# 984 "Src/util.c"
-      if (timeoutCntSerial_R++ >= 160) {
-        timeoutFlgSerial_R = 1;
-        timeoutCntSerial_R = 160;
-
-          inIdx = 0;
-
-      } else {
-
-          if (Sideboard_R.sensors & (0x0100)) {
-            inIdx = 1;
-          } else {
-            inIdx = !1;
-          }
-
-
-
-      }
 # 1032 "Src/util.c"
     if (timeoutFlgADC || timeoutFlgSerial || timeoutFlgGen) {
       ctrlModReq = 0;
@@ -5645,124 +5568,11 @@ void usart2_rx_check(void)
 void usart3_rx_check(void)
 {
   HAL_Delay(2);
-
-  static uint32_t old_pos;
-  uint32_t pos;
-  pos = rx_buffer_R_len - ((huart3.hdmarx)->Instance->CNDTR);
-# 1198 "Src/util.c"
-  uint8_t *ptr;
-  if (pos != old_pos) {
-    ptr = (uint8_t *)&Sideboard_R_raw;
-    if (pos > old_pos && (pos - old_pos) == Sideboard_R_len) {
-      memcpy(ptr, &rx_buffer_R[old_pos], Sideboard_R_len);
-      usart_process_sideboard(&Sideboard_R_raw, &Sideboard_R, 3);
-    } else if ((rx_buffer_R_len - old_pos + pos) == Sideboard_R_len) {
-      memcpy(ptr, &rx_buffer_R[old_pos], rx_buffer_R_len - old_pos);
-      if (pos > 0) {
-        ptr += rx_buffer_R_len - old_pos;
-        memcpy(ptr, &rx_buffer_R[0], pos);
-      }
-      usart_process_sideboard(&Sideboard_R_raw, &Sideboard_R, 3);
-    }
-  }
-
-
-
-  old_pos = pos;
-  if (old_pos == rx_buffer_R_len) {
-    old_pos = 0;
-  }
-
-}
-# 1322 "Src/util.c"
-void usart_process_sideboard(SerialSideboard *Sideboard_in, SerialSideboard *Sideboard_out, uint8_t usart_idx)
-{
-  uint16_t checksum;
-  if (Sideboard_in->start == 0xABCD) {
-    checksum = (uint16_t)(Sideboard_in->start ^ Sideboard_in->pitch ^ Sideboard_in->dPitch ^ Sideboard_in->cmd1 ^ Sideboard_in->cmd2 ^ Sideboard_in->sensors);
-    if (Sideboard_in->checksum == checksum) {
-      *Sideboard_out = *Sideboard_in;
-      if (usart_idx == 2) {
-
-
-
-
-      } else if (usart_idx == 3) {
-
-        timeoutCntSerial_R = 0;
-        timeoutFlgSerial_R = 0;
-
-      }
-    }
-  }
+# 1221 "Src/util.c"
 }
 # 1352 "Src/util.c"
 void sideboardLeds(uint8_t *leds) {
-
-
-
-
-    if (enable) {
-      *leds |= (0x08);
-    } else if (!enable && (main_loop_counter % 20 == 0)) {
-      *leds ^= (0x08);
-    }
-
-
-
-
-    if (backwardDrive && (main_loop_counter % 50 == 0)) {
-      *leds ^= (0x10);
-    }
-
-
-
-
-
-      if (brakePressed) {
-        *leds |= (0x10);
-      } else if (!brakePressed && !backwardDrive) {
-        *leds &= ~(0x10);
-      }
-
-
-
-    if (main_loop_counter % 80 == 0) {
-      if (batVoltage < (337 * 10 * 1492) / 3970) {
-        *leds &= ~(0x01) & ~(0x04) & ~(0x02);
-      } else if (batVoltage < (350 * 10 * 1492) / 3970) {
-        *leds ^= (0x01);
-        *leds &= ~(0x04) & ~(0x02);
-      } else if (batVoltage < (360 * 10 * 1492) / 3970) {
-        *leds |= (0x01);
-        *leds &= ~(0x04) & ~(0x02);
-      } else if (batVoltage < (370 * 10 * 1492) / 3970) {
-        *leds ^= (0x04);
-        *leds &= ~(0x01) & ~(0x02);
-      } else if (batVoltage < (380 * 10 * 1492) / 3970) {
-        *leds |= (0x04);
-        *leds &= ~(0x01) & ~(0x02);
-      } else if (batVoltage < (390 * 10 * 1492) / 3970) {
-        *leds ^= (0x02);
-        *leds &= ~(0x01) & ~(0x04);
-      } else {
-        *leds |= (0x02);
-        *leds &= ~(0x01) & ~(0x04);
-      }
-    }
-
-
-
-
-    if (rtY_Left.z_errCode || rtY_Right.z_errCode) {
-      *leds |= (0x01);
-      *leds &= ~(0x04) & ~(0x02);
-    }
-    if (timeoutFlgADC || timeoutFlgSerial) {
-      *leds |= (0x04);
-      *leds &= ~(0x01) & ~(0x02);
-    }
-
+# 1418 "Src/util.c"
 }
 
 
@@ -5771,98 +5581,7 @@ void sideboardLeds(uint8_t *leds) {
 
 
 void sideboardSensors(uint8_t sensors) {
-
-    static uint8_t sensor1_index;
-    static uint8_t sensor1_prev, sensor2_prev;
-    uint8_t sensor1_trig = 0, sensor2_trig = 0;
-
-
-
-
-    uint8_t sideboardIdx = 1;
-    uint16_t sideboardSns = Sideboard_R.sensors;
-
-
-    if (inIdx == sideboardIdx) {
-      sensor1_index = 2 + ((sideboardSns & (0x0600)) >> 9);
-      if (sensor1_index == 2) {
-        sensor1_index = (sideboardSns & (0x1800)) >> 11;
-      }
-      sensor1_trig = sensor1_index != sensor1_prev;
-      if (inIdx != inIdx_prev) {
-        sensor1_trig = 1;
-      }
-      sensor1_prev = sensor1_index;
-    } else {
-      sensor1_trig = (sensors & (0x01)) && !sensor1_prev;
-      sensor1_prev = sensors & (0x01);
-    }
-
-
-    if (sensor1_trig) {
-      switch (sensor1_index) {
-        case 0:
-          rtP_Left.z_ctrlTypSel = rtP_Right.z_ctrlTypSel = 2;
-          ctrlModReqRaw = 1;
-          break;
-        case 1:
-          rtP_Left.z_ctrlTypSel = rtP_Right.z_ctrlTypSel = 2;
-          ctrlModReqRaw = 2;
-          break;
-        case 2:
-          rtP_Left.z_ctrlTypSel = rtP_Right.z_ctrlTypSel = 2;
-          ctrlModReqRaw = 3;
-          break;
-        case 3:
-          rtP_Left.z_ctrlTypSel = rtP_Right.z_ctrlTypSel = 1;
-          break;
-        case 4:
-          rtP_Left.z_ctrlTypSel = rtP_Right.z_ctrlTypSel = 0;
-          break;
-      }
-      if (inIdx == inIdx_prev) { beepShortMany(sensor1_index + 1, 1); }
-      if (++sensor1_index > 4) { sensor1_index = 0; }
-    }
-
-
-      static uint8_t sensor2_index = 1;
-
-
-      if (inIdx == sideboardIdx) {
-        sensor2_index = (sideboardSns & (0x2000)) >> 13;
-        sensor2_trig = sensor2_index != sensor2_prev;
-        if (inIdx != inIdx_prev) {
-          sensor2_trig = 1;
-        }
-        sensor2_prev = sensor2_index;
-      }else{
-        sensor2_trig = (sensors & (0x02)) && !sensor2_prev;
-        sensor2_prev = sensors & (0x02);
-      }
-
-
-
-
-
-
-        if (sensor2_trig) {
-          switch (sensor2_index) {
-            case 0:
-              rtP_Left.b_fieldWeakEna = 0;
-              rtP_Right.b_fieldWeakEna = 0;
-              Input_Lim_Init();
-              break;
-            case 1:
-              rtP_Left.b_fieldWeakEna = 1;
-              rtP_Right.b_fieldWeakEna = 1;
-              Input_Lim_Init();
-              break;
-          }
-          if (inIdx == inIdx_prev) { beepShortMany(sensor2_index + 1, 1); }
-          if (++sensor2_index > 1) { sensor2_index = 0; }
-        }
-
-
+# 1518 "Src/util.c"
 }
 # 1528 "Src/util.c"
 void saveConfig() {
