@@ -5312,7 +5312,7 @@ void adcCalibLim(void) {
   uint16_t input_cal_timeout = 0;
 
 
-  if (inIdx == 0) {
+  if (inIdx == 1) {
     input_margin = 100;
   }
 
@@ -5522,7 +5522,7 @@ void calcInputCmd(InputStruct *in, int16_t out_min, int16_t out_max) {
 
 void readInputRaw(void) {
 
-    if (inIdx == 0) {
+    if (inIdx == 1) {
 
 
 
@@ -5552,7 +5552,7 @@ void readInputRaw(void) {
 
 void handleTimeout(void) {
 
-    if (inIdx == 0) {
+    if (inIdx == 1) {
 
       if ((((input1[inIdx].raw) >= (input1[inIdx].min - 200)) && ((input1[inIdx].raw) <= (input1[inIdx].max + 200))) &&
           (((input2[inIdx].raw) >= (input2[inIdx].min - 200)) && ((input2[inIdx].raw) <= (input2[inIdx].max + 200)))) {
@@ -5614,7 +5614,7 @@ void readCommand(void) {
     handleTimeout();
 
 
-    if (inIdx == 0) {
+    if (inIdx == 1) {
       brakePressed = (uint8_t)(input1[inIdx].cmd > 50);
     }
     else {

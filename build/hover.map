@@ -1444,7 +1444,7 @@ LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
                 0x08000000                g_pfnVectors
                 0x080001e4                        . = ALIGN (0x4)
 
-.text           0x080001e4     0x83b8
+.text           0x080001e4     0x83bc
                 0x080001e4                        . = ALIGN (0x4)
  *(.text)
  .text          0x080001e4       0x88 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
@@ -1860,352 +1860,352 @@ LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
                 0x0800510c                calcInputCmd
  *fill*         0x080051b6        0x2 
  .text.readInputRaw
-                0x080051b8       0x5c /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x080051b8       0x60 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
                 0x080051b8                readInputRaw
  .text.handleTimeout
-                0x08005214      0x124 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x08005214                handleTimeout
+                0x08005218      0x12c /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x08005218                handleTimeout
  .text.readCommand
-                0x08005338       0x9c /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x08005338                readCommand
+                0x08005344       0xa0 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x08005344                readCommand
  .text.usart_process_command
-                0x080053d4       0x50 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x080053d4                usart_process_command
+                0x080053e4       0x50 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x080053e4                usart_process_command
  .text.usart3_rx_check
-                0x08005424       0x98 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x08005424                usart3_rx_check
+                0x08005434       0x98 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x08005434                usart3_rx_check
  .text.sideboardLeds
-                0x080054bc        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x080054bc                sideboardLeds
- *fill*         0x080054be        0x2 
+                0x080054cc        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x080054cc                sideboardLeds
+ *fill*         0x080054ce        0x2 
  .text.saveConfig
-                0x080054c0      0x100 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x080054c0                saveConfig
+                0x080054d0      0x100 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x080054d0                saveConfig
  .text.poweroff
-                0x080055c0       0x48 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x080055c0                poweroff
+                0x080055d0       0x48 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x080055d0                poweroff
  .text.filtLowPass32
-                0x08005608       0x46 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x08005608                filtLowPass32
- *fill*         0x0800564e        0x2 
+                0x08005618       0x46 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x08005618                filtLowPass32
+ *fill*         0x0800565e        0x2 
  .text.adcCalibLim
-                0x08005650      0x180 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x08005650                adcCalibLim
+                0x08005660      0x180 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x08005660                adcCalibLim
  .text.updateCurSpdLim
-                0x080057d0      0x170 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x080057d0                updateCurSpdLim
+                0x080057e0      0x170 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x080057e0                updateCurSpdLim
  .text.poweroffPressCheck
-                0x08005940       0xa0 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x08005940                poweroffPressCheck
+                0x08005950       0xa0 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x08005950                poweroffPressCheck
  .text.rateLimiter16
-                0x080059e0       0x1e /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x080059e0                rateLimiter16
- *fill*         0x080059fe        0x2 
+                0x080059f0       0x1e /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x080059f0                rateLimiter16
+ *fill*         0x08005a0e        0x2 
  .text.mixerFcn
-                0x08005a00       0x7c /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x08005a00                mixerFcn
+                0x08005a10       0x7c /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x08005a10                mixerFcn
  .text.multipleTapDet
-                0x08005a7c       0x76 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x08005a7c                multipleTapDet
- *fill*         0x08005af2        0x2 
+                0x08005a8c       0x76 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x08005a8c                multipleTapDet
+ *fill*         0x08005b02        0x2 
  .text.SystemClock_Config
-                0x08005af4       0x74 /workspaces/hoverboard-firmware-hack-FOC/build/main.o
-                0x08005af4                SystemClock_Config
- .text.main     0x08005b68      0x7fc /workspaces/hoverboard-firmware-hack-FOC/build/main.o
-                0x08005b68                main
+                0x08005b04       0x74 /workspaces/hoverboard-firmware-hack-FOC/build/main.o
+                0x08005b04                SystemClock_Config
+ .text.main     0x08005b78      0x7f0 /workspaces/hoverboard-firmware-hack-FOC/build/main.o
+                0x08005b78                main
  .text.DMA1_Channel1_IRQHandler
-                0x08006364      0x504 /workspaces/hoverboard-firmware-hack-FOC/build/bldc.o
-                0x08006364                DMA1_Channel1_IRQHandler
+                0x08006368      0x504 /workspaces/hoverboard-firmware-hack-FOC/build/bldc.o
+                0x08006368                DMA1_Channel1_IRQHandler
  .text.EE_VerifyPageFullyErased
-                0x08006868       0x24 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
+                0x0800686c       0x24 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
  .text.EE_FindValidPage
-                0x0800688c       0x50 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
+                0x08006890       0x50 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
  .text.EE_VerifyPageFullWriteVariable
-                0x080068dc       0x54 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
+                0x080068e0       0x54 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
  .text.EE_Format
-                0x08006930       0x60 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
+                0x08006934       0x60 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
  .text.EE_ReadVariable
-                0x08006990       0x48 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
-                0x08006990                EE_ReadVariable
- .text.EE_Init  0x080069d8      0x250 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
-                0x080069d8                EE_Init
+                0x08006994       0x48 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
+                0x08006994                EE_ReadVariable
+ .text.EE_Init  0x080069dc      0x250 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
+                0x080069dc                EE_Init
  .text.EE_PageTransfer
-                0x08006c28       0xc4 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
+                0x08006c2c       0xc4 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
  .text.EE_WriteVariable
-                0x08006cec       0x1a /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
-                0x08006cec                EE_WriteVariable
+                0x08006cf0       0x1a /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
+                0x08006cf0                EE_WriteVariable
  .text.NMI_Handler
-                0x08006d06        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d06                NMI_Handler
- .text.HardFault_Handler
-                0x08006d08        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d08                HardFault_Handler
- .text.MemManage_Handler
                 0x08006d0a        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d0a                MemManage_Handler
- .text.BusFault_Handler
+                0x08006d0a                NMI_Handler
+ .text.HardFault_Handler
                 0x08006d0c        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d0c                BusFault_Handler
- .text.UsageFault_Handler
+                0x08006d0c                HardFault_Handler
+ .text.MemManage_Handler
                 0x08006d0e        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d0e                UsageFault_Handler
- .text.SVC_Handler
+                0x08006d0e                MemManage_Handler
+ .text.BusFault_Handler
                 0x08006d10        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d10                SVC_Handler
- .text.DebugMon_Handler
+                0x08006d10                BusFault_Handler
+ .text.UsageFault_Handler
                 0x08006d12        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d12                DebugMon_Handler
- .text.PendSV_Handler
+                0x08006d12                UsageFault_Handler
+ .text.SVC_Handler
                 0x08006d14        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d14                PendSV_Handler
+                0x08006d14                SVC_Handler
+ .text.DebugMon_Handler
+                0x08006d16        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
+                0x08006d16                DebugMon_Handler
+ .text.PendSV_Handler
+                0x08006d18        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
+                0x08006d18                PendSV_Handler
  .text.SysTick_Handler
-                0x08006d16        0xc /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d16                SysTick_Handler
- *fill*         0x08006d22        0x2 
+                0x08006d1a        0xc /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
+                0x08006d1a                SysTick_Handler
+ *fill*         0x08006d26        0x2 
  .text.DMA1_Channel2_IRQHandler
-                0x08006d24       0x10 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d24                DMA1_Channel2_IRQHandler
+                0x08006d28       0x10 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
+                0x08006d28                DMA1_Channel2_IRQHandler
  .text.DMA1_Channel3_IRQHandler
-                0x08006d34       0x10 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d34                DMA1_Channel3_IRQHandler
+                0x08006d38       0x10 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
+                0x08006d38                DMA1_Channel3_IRQHandler
  .text.USART3_IRQHandler
-                0x08006d44       0x34 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
-                0x08006d44                USART3_IRQHandler
+                0x08006d48       0x34 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
+                0x08006d48                USART3_IRQHandler
  .text.plook_u8s16_evencka
-                0x08006d78       0x1c /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006d78                plook_u8s16_evencka
+                0x08006d7c       0x1c /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006d7c                plook_u8s16_evencka
  .text.plook_u8u16_evencka
-                0x08006d94       0x1c /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006d94                plook_u8u16_evencka
+                0x08006d98       0x1c /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006d98                plook_u8u16_evencka
  .text.div_nde_s32_floor
-                0x08006db0       0x22 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006db0                div_nde_s32_floor
+                0x08006db4       0x22 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006db4                div_nde_s32_floor
  .text.Counter_Init
-                0x08006dd2        0x4 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006dd2                Counter_Init
- .text.Counter  0x08006dd6       0x1a /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006dd6                Counter
+                0x08006dd6        0x4 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006dd6                Counter_Init
+ .text.Counter  0x08006dda       0x1a /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006dda                Counter
  .text.Low_Pass_Filter_Reset
-                0x08006df0        0x8 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006df0                Low_Pass_Filter_Reset
+                0x08006df4        0x8 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006df4                Low_Pass_Filter_Reset
  .text.Low_Pass_Filter
-                0x08006df8       0x5c /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006df8                Low_Pass_Filter
+                0x08006dfc       0x5c /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006dfc                Low_Pass_Filter
  .text.Counter_b_Init
-                0x08006e54        0x4 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006e54                Counter_b_Init
+                0x08006e58        0x4 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006e58                Counter_b_Init
  .text.Counter_n
-                0x08006e58       0x20 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006e58                Counter_n
+                0x08006e5c       0x20 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006e5c                Counter_n
  .text.either_edge
-                0x08006e78        0xe /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006e78                either_edge
+                0x08006e7c        0xe /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006e7c                either_edge
  .text.Debounce_Filter_Init
-                0x08006e86       0x16 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006e86                Debounce_Filter_Init
+                0x08006e8a       0x16 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006e8a                Debounce_Filter_Init
  .text.Debounce_Filter
-                0x08006e9c       0x8c /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006e9c                Debounce_Filter
+                0x08006ea0       0x8c /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006ea0                Debounce_Filter
  .text.I_backCalc_fixdt_Init
-                0x08006f28        0x4 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006f28                I_backCalc_fixdt_Init
+                0x08006f2c        0x4 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006f2c                I_backCalc_fixdt_Init
  .text.I_backCalc_fixdt_Reset
-                0x08006f2c        0x8 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006f2c                I_backCalc_fixdt_Reset
+                0x08006f30        0x8 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006f30                I_backCalc_fixdt_Reset
  .text.I_backCalc_fixdt
-                0x08006f34       0x72 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006f34                I_backCalc_fixdt
+                0x08006f38       0x72 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006f38                I_backCalc_fixdt
  .text.PI_clamp_fixdt_Init
-                0x08006fa6        0x6 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006fa6                PI_clamp_fixdt_Init
+                0x08006faa        0x6 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006faa                PI_clamp_fixdt_Init
  .text.PI_clamp_fixdt_Reset
-                0x08006fac        0xa /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006fac                PI_clamp_fixdt_Reset
- *fill*         0x08006fb6        0x2 
+                0x08006fb0        0xa /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006fb0                PI_clamp_fixdt_Reset
+ *fill*         0x08006fba        0x2 
  .text.PI_clamp_fixdt
-                0x08006fb8       0xf4 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08006fb8                PI_clamp_fixdt
+                0x08006fbc       0xf4 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x08006fbc                PI_clamp_fixdt
  .text.PI_clamp_fixdt_d_Init
-                0x080070ac        0x6 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x080070ac                PI_clamp_fixdt_d_Init
+                0x080070b0        0x6 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x080070b0                PI_clamp_fixdt_d_Init
  .text.PI_clamp_fixdt_b_Reset
-                0x080070b2        0xa /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x080070b2                PI_clamp_fixdt_b_Reset
+                0x080070b6        0xa /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x080070b6                PI_clamp_fixdt_b_Reset
  .text.PI_clamp_fixdt_l
-                0x080070bc       0xf8 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x080070bc                PI_clamp_fixdt_l
+                0x080070c0       0xf8 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x080070c0                PI_clamp_fixdt_l
  .text.PI_clamp_fixdt_f_Init
-                0x080071b4        0x6 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x080071b4                PI_clamp_fixdt_f_Init
+                0x080071b8        0x6 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x080071b8                PI_clamp_fixdt_f_Init
  .text.PI_clamp_fixdt_g_Reset
-                0x080071ba        0xa /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x080071ba                PI_clamp_fixdt_g_Reset
+                0x080071be        0xa /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x080071be                PI_clamp_fixdt_g_Reset
  .text.PI_clamp_fixdt_k
-                0x080071c4      0x108 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x080071c4                PI_clamp_fixdt_k
+                0x080071c8      0x108 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x080071c8                PI_clamp_fixdt_k
  .text.BLDC_controller_step
-                0x080072cc     0x11ac /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x080072cc                BLDC_controller_step
+                0x080072d0     0x11ac /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x080072d0                BLDC_controller_step
  .text.BLDC_controller_initialize
-                0x08008478       0xc0 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
-                0x08008478                BLDC_controller_initialize
+                0x0800847c       0xc0 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+                0x0800847c                BLDC_controller_initialize
  .text.Reset_Handler
-                0x08008538       0x48 /workspaces/hoverboard-firmware-hack-FOC/build/startup_stm32f103xe.o
-                0x08008538                Reset_Handler
+                0x0800853c       0x48 /workspaces/hoverboard-firmware-hack-FOC/build/startup_stm32f103xe.o
+                0x0800853c                Reset_Handler
  .text.Default_Handler
-                0x08008580        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/startup_stm32f103xe.o
-                0x08008580                RTC_Alarm_IRQHandler
-                0x08008580                EXTI2_IRQHandler
-                0x08008580                TIM8_TRG_COM_IRQHandler
-                0x08008580                TIM8_CC_IRQHandler
-                0x08008580                TIM1_CC_IRQHandler
-                0x08008580                TIM6_IRQHandler
-                0x08008580                PVD_IRQHandler
-                0x08008580                SDIO_IRQHandler
-                0x08008580                EXTI3_IRQHandler
-                0x08008580                EXTI0_IRQHandler
-                0x08008580                I2C2_EV_IRQHandler
-                0x08008580                ADC1_2_IRQHandler
-                0x08008580                SPI1_IRQHandler
-                0x08008580                TAMPER_IRQHandler
-                0x08008580                TIM8_UP_IRQHandler
-                0x08008580                DMA2_Channel2_IRQHandler
-                0x08008580                DMA1_Channel4_IRQHandler
-                0x08008580                RTC_IRQHandler
-                0x08008580                DMA1_Channel7_IRQHandler
-                0x08008580                CAN1_RX1_IRQHandler
-                0x08008580                UART5_IRQHandler
-                0x08008580                ADC3_IRQHandler
-                0x08008580                TIM4_IRQHandler
-                0x08008580                DMA2_Channel1_IRQHandler
-                0x08008580                I2C1_EV_IRQHandler
-                0x08008580                DMA1_Channel6_IRQHandler
-                0x08008580                UART4_IRQHandler
-                0x08008580                TIM3_IRQHandler
-                0x08008580                RCC_IRQHandler
-                0x08008580                TIM1_TRG_COM_IRQHandler
-                0x08008580                Default_Handler
-                0x08008580                EXTI15_10_IRQHandler
-                0x08008580                TIM7_IRQHandler
-                0x08008580                TIM5_IRQHandler
-                0x08008580                EXTI9_5_IRQHandler
-                0x08008580                SPI2_IRQHandler
-                0x08008580                DMA1_Channel5_IRQHandler
-                0x08008580                EXTI4_IRQHandler
-                0x08008580                USB_LP_CAN1_RX0_IRQHandler
-                0x08008580                USB_HP_CAN1_TX_IRQHandler
-                0x08008580                FSMC_IRQHandler
-                0x08008580                TIM1_UP_IRQHandler
-                0x08008580                WWDG_IRQHandler
-                0x08008580                TIM2_IRQHandler
-                0x08008580                TIM1_BRK_IRQHandler
-                0x08008580                EXTI1_IRQHandler
-                0x08008580                DMA2_Channel4_5_IRQHandler
-                0x08008580                USART2_IRQHandler
-                0x08008580                I2C2_ER_IRQHandler
-                0x08008580                TIM8_BRK_IRQHandler
-                0x08008580                CAN1_SCE_IRQHandler
-                0x08008580                FLASH_IRQHandler
-                0x08008580                USART1_IRQHandler
-                0x08008580                SPI3_IRQHandler
-                0x08008580                I2C1_ER_IRQHandler
-                0x08008580                USBWakeUp_IRQHandler
-                0x08008580                DMA2_Channel3_IRQHandler
+                0x08008584        0x2 /workspaces/hoverboard-firmware-hack-FOC/build/startup_stm32f103xe.o
+                0x08008584                RTC_Alarm_IRQHandler
+                0x08008584                EXTI2_IRQHandler
+                0x08008584                TIM8_TRG_COM_IRQHandler
+                0x08008584                TIM8_CC_IRQHandler
+                0x08008584                TIM1_CC_IRQHandler
+                0x08008584                TIM6_IRQHandler
+                0x08008584                PVD_IRQHandler
+                0x08008584                SDIO_IRQHandler
+                0x08008584                EXTI3_IRQHandler
+                0x08008584                EXTI0_IRQHandler
+                0x08008584                I2C2_EV_IRQHandler
+                0x08008584                ADC1_2_IRQHandler
+                0x08008584                SPI1_IRQHandler
+                0x08008584                TAMPER_IRQHandler
+                0x08008584                TIM8_UP_IRQHandler
+                0x08008584                DMA2_Channel2_IRQHandler
+                0x08008584                DMA1_Channel4_IRQHandler
+                0x08008584                RTC_IRQHandler
+                0x08008584                DMA1_Channel7_IRQHandler
+                0x08008584                CAN1_RX1_IRQHandler
+                0x08008584                UART5_IRQHandler
+                0x08008584                ADC3_IRQHandler
+                0x08008584                TIM4_IRQHandler
+                0x08008584                DMA2_Channel1_IRQHandler
+                0x08008584                I2C1_EV_IRQHandler
+                0x08008584                DMA1_Channel6_IRQHandler
+                0x08008584                UART4_IRQHandler
+                0x08008584                TIM3_IRQHandler
+                0x08008584                RCC_IRQHandler
+                0x08008584                TIM1_TRG_COM_IRQHandler
+                0x08008584                Default_Handler
+                0x08008584                EXTI15_10_IRQHandler
+                0x08008584                TIM7_IRQHandler
+                0x08008584                TIM5_IRQHandler
+                0x08008584                EXTI9_5_IRQHandler
+                0x08008584                SPI2_IRQHandler
+                0x08008584                DMA1_Channel5_IRQHandler
+                0x08008584                EXTI4_IRQHandler
+                0x08008584                USB_LP_CAN1_RX0_IRQHandler
+                0x08008584                USB_HP_CAN1_TX_IRQHandler
+                0x08008584                FSMC_IRQHandler
+                0x08008584                TIM1_UP_IRQHandler
+                0x08008584                WWDG_IRQHandler
+                0x08008584                TIM2_IRQHandler
+                0x08008584                TIM1_BRK_IRQHandler
+                0x08008584                EXTI1_IRQHandler
+                0x08008584                DMA2_Channel4_5_IRQHandler
+                0x08008584                USART2_IRQHandler
+                0x08008584                I2C2_ER_IRQHandler
+                0x08008584                TIM8_BRK_IRQHandler
+                0x08008584                CAN1_SCE_IRQHandler
+                0x08008584                FLASH_IRQHandler
+                0x08008584                USART1_IRQHandler
+                0x08008584                SPI3_IRQHandler
+                0x08008584                I2C1_ER_IRQHandler
+                0x08008584                USBWakeUp_IRQHandler
+                0x08008584                DMA2_Channel3_IRQHandler
  *(.glue_7)
- .glue_7        0x08008582        0x0 linker stubs
+ .glue_7        0x08008586        0x0 linker stubs
  *(.glue_7t)
- .glue_7t       0x08008582        0x0 linker stubs
+ .glue_7t       0x08008586        0x0 linker stubs
  *(.eh_frame)
- *fill*         0x08008582        0x2 
- .eh_frame      0x08008584        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
+ *fill*         0x08008586        0x2 
+ .eh_frame      0x08008588        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
  *(.init)
- .init          0x08008584        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crti.o
-                0x08008584                _init
- .init          0x08008588        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
+ .init          0x08008588        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crti.o
+                0x08008588                _init
+ .init          0x0800858c        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
  *(.fini)
- .fini          0x08008590        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crti.o
-                0x08008590                _fini
- .fini          0x08008594        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
-                0x0800859c                        . = ALIGN (0x4)
-                0x0800859c                        _etext = .
+ .fini          0x08008594        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crti.o
+                0x08008594                _fini
+ .fini          0x08008598        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
+                0x080085a0                        . = ALIGN (0x4)
+                0x080085a0                        _etext = .
 
-.vfp11_veneer   0x0800859c        0x0
- .vfp11_veneer  0x0800859c        0x0 linker stubs
+.vfp11_veneer   0x080085a0        0x0
+ .vfp11_veneer  0x080085a0        0x0 linker stubs
 
-.v4_bx          0x0800859c        0x0
- .v4_bx         0x0800859c        0x0 linker stubs
+.v4_bx          0x080085a0        0x0
+ .v4_bx         0x080085a0        0x0 linker stubs
 
-.iplt           0x0800859c        0x0
- .iplt          0x0800859c        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
+.iplt           0x080085a0        0x0
+ .iplt          0x080085a0        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
 
-.rodata         0x0800859c      0x89c
-                0x0800859c                        . = ALIGN (0x4)
+.rodata         0x080085a0      0x89c
+                0x080085a0                        . = ALIGN (0x4)
  *(.rodata)
  *(.rodata*)
  .rodata.HAL_RCC_GetSysClockFreq.str1.4
-                0x0800859c       0xe9 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_hal_rcc.o
+                0x080085a0       0xe9 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_hal_rcc.o
                                  0x11 (size before relaxing)
- *fill*         0x08008685        0x3 
+ *fill*         0x08008689        0x3 
  .rodata.APBPrescTable
-                0x08008688        0x8 /workspaces/hoverboard-firmware-hack-FOC/build/system_stm32f1xx.o
-                0x08008688                APBPrescTable
+                0x0800868c        0x8 /workspaces/hoverboard-firmware-hack-FOC/build/system_stm32f1xx.o
+                0x0800868c                APBPrescTable
  .rodata.AHBPrescTable
-                0x08008690       0x10 /workspaces/hoverboard-firmware-hack-FOC/build/system_stm32f1xx.o
-                0x08008690                AHBPrescTable
+                0x08008694       0x10 /workspaces/hoverboard-firmware-hack-FOC/build/system_stm32f1xx.o
+                0x08008694                AHBPrescTable
  .rodata.Input_Init.str1.4
-                0x080086a0       0x59 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x080086a4       0x59 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
  .rodata.rtM_Right
-                0x080086a0        0x4 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x080086a0                rtM_Right
- .rodata.rtM_Left
                 0x080086a4        0x4 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
-                0x080086a4                rtM_Left
+                0x080086a4                rtM_Right
+ .rodata.rtM_Left
+                0x080086a8        0x4 /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+                0x080086a8                rtM_Left
  .rodata.main.str1.4
-                0x080086a8       0x3d /workspaces/hoverboard-firmware-hack-FOC/build/main.o
+                0x080086ac       0x3d /workspaces/hoverboard-firmware-hack-FOC/build/main.o
  .rodata.rtConstP
-                0x080086a8      0x790 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller_data.o
-                0x080086a8                rtConstP
+                0x080086ac      0x790 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller_data.o
+                0x080086ac                rtConstP
  .rodata.str1.4
-                0x08008e38       0x13 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-svfprintf.o)
+                0x08008e3c       0x13 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-svfprintf.o)
  .rodata.str1.4
-                0x08008e38       0x25 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf_i.o)
+                0x08008e3c       0x25 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf_i.o)
  .rodata.str1.4
-                0x08008e38       0x13 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf.o)
-                0x08008e60                        . = ALIGN (0x4)
+                0x08008e3c       0x13 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf.o)
+                0x08008e64                        . = ALIGN (0x4)
 
 .ARM.extab
  *(.ARM.extab* .gnu.linkonce.armextab.*)
 
-.ARM            0x08008e38        0x8
-                0x08008e38                        __exidx_start = .
+.ARM            0x08008e3c        0x8
+                0x08008e3c                        __exidx_start = .
  *(.ARM.exidx*)
- .ARM.exidx     0x08008e38        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memcpy.o)
-                0x08008e40                        __exidx_end = .
+ .ARM.exidx     0x08008e3c        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memcpy.o)
+                0x08008e44                        __exidx_end = .
 
-.rel.dyn        0x08008e40        0x0
- .rel.iplt      0x08008e40        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
+.rel.dyn        0x08008e44        0x0
+ .rel.iplt      0x08008e44        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
 
-.preinit_array  0x08008e40        0x0
-                0x08008e40                        PROVIDE (__preinit_array_start = .)
+.preinit_array  0x08008e44        0x0
+                0x08008e44                        PROVIDE (__preinit_array_start = .)
  *(.preinit_array*)
-                0x08008e40                        PROVIDE (__preinit_array_end = .)
+                0x08008e44                        PROVIDE (__preinit_array_end = .)
 
-.init_array     0x08008e40        0x4
-                0x08008e40                        PROVIDE (__init_array_start = .)
+.init_array     0x08008e44        0x4
+                0x08008e44                        PROVIDE (__init_array_start = .)
  *(SORT_BY_NAME(.init_array.*))
  *(.init_array*)
- .init_array    0x08008e40        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
-                0x08008e44                        PROVIDE (__init_array_end = .)
+ .init_array    0x08008e44        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
+                0x08008e48                        PROVIDE (__init_array_end = .)
 
-.fini_array     0x08008e44        0x4
-                0x08008e44                        PROVIDE (__fini_array_start = .)
+.fini_array     0x08008e48        0x4
+                0x08008e48                        PROVIDE (__fini_array_start = .)
  *(SORT_BY_NAME(.fini_array.*))
  *(.fini_array*)
- .fini_array    0x08008e44        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
-                0x08008e48                        PROVIDE (__fini_array_end = .)
-                0x08008e48                        _sidata = LOADADDR (.data)
+ .fini_array    0x08008e48        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
+                0x08008e4c                        PROVIDE (__fini_array_end = .)
+                0x08008e4c                        _sidata = LOADADDR (.data)
 
-.data           0x20000000      0x1dc load address 0x08008e48
+.data           0x20000000      0x1dc load address 0x08008e4c
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        _sdata = .
  *(.data)
@@ -2262,17 +2262,17 @@ LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
                 0x200001dc                        _edata = .
 
 .tm_clone_table
-                0x200001dc        0x0 load address 0x08009024
+                0x200001dc        0x0 load address 0x08009028
  .tm_clone_table
                 0x200001dc        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
  .tm_clone_table
                 0x200001dc        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtend.o
 
-.igot.plt       0x200001dc        0x0 load address 0x08009024
+.igot.plt       0x200001dc        0x0 load address 0x08009028
  .igot.plt      0x200001dc        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
                 0x200001dc                        . = ALIGN (0x4)
 
-.bss            0x200001e0      0x784 load address 0x08009024
+.bss            0x200001e0      0x784 load address 0x08009028
                 0x200001e0                        _sbss = .
                 0x200001e0                        __bss_start__ = _sbss
  *(.bss)
@@ -2492,7 +2492,7 @@ LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
                 0x20000964                        __bss_end__ = _ebss
 
 ._user_heap_stack
-                0x20000964      0x604 load address 0x08009024
+                0x20000964      0x604 load address 0x08009028
                 0x20000968                        . = ALIGN (0x8)
  *fill*         0x20000964        0x4 
                 0x20000968                        PROVIDE (end = .)
@@ -3031,7 +3031,7 @@ LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/libgcc.a
  .debug_ranges  0x00000e10       0xd8 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
  .debug_ranges  0x00000ee8       0x20 /workspaces/hoverboard-firmware-hack-FOC/build/startup_stm32f103xe.o
 
-.debug_line     0x00000000    0x161e0
+.debug_line     0x00000000    0x161e7
  .debug_line    0x00000000      0x66f /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_hal_flash.o
  .debug_line    0x0000066f      0xb1f /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_hal_rcc.o
  .debug_line    0x0000118e     0x2d9b /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_hal_tim.o
@@ -3048,54 +3048,54 @@ LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/libgcc.a
  .debug_line    0x0000a674      0x203 /workspaces/hoverboard-firmware-hack-FOC/build/system_stm32f1xx.o
  .debug_line    0x0000a877      0xa53 /workspaces/hoverboard-firmware-hack-FOC/build/setup.o
  .debug_line    0x0000b2ca      0x397 /workspaces/hoverboard-firmware-hack-FOC/build/control.o
- .debug_line    0x0000b661     0x120d /workspaces/hoverboard-firmware-hack-FOC/build/util.o
- .debug_line    0x0000c86e      0x7ca /workspaces/hoverboard-firmware-hack-FOC/build/main.o
- .debug_line    0x0000d038      0x628 /workspaces/hoverboard-firmware-hack-FOC/build/bldc.o
- .debug_line    0x0000d660      0x7b2 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
- .debug_line    0x0000de12      0x289 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
- .debug_line    0x0000e09b       0x62 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller_data.o
- .debug_line    0x0000e0fd     0x2254 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
- .debug_line    0x00010351       0x6f /workspaces/hoverboard-firmware-hack-FOC/build/startup_stm32f103xe.o
- .debug_line    0x000103c0      0x234 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-sprintf.o)
- .debug_line    0x000105f4       0xf4 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-strlen-stub.o)
- .debug_line    0x000106e8       0xe7 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-impure.o)
- .debug_line    0x000107cf      0x862 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-svfprintf.o)
- .debug_line    0x00011031      0x11e /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-init.o)
- .debug_line    0x0001114f      0x1b1 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memset.o)
- .debug_line    0x00011300      0x45c /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-mallocr.o)
- .debug_line    0x0001175c      0x2c8 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-freer.o)
- .debug_line    0x00011a24      0x20d /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memmove.o)
- .debug_line    0x00011c31       0xbd /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memcpy.o)
- .debug_line    0x00011cee      0x1fa /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-reallocr.o)
- .debug_line    0x00011ee8      0x770 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf_i.o)
- .debug_line    0x00012658      0x153 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-mlock.o)
- .debug_line    0x000127ab      0x200 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memchr-stub.o)
- .debug_line    0x000129ab      0x1c0 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-printf.o)
- .debug_line    0x00012b6b      0x6b7 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf.o)
- .debug_line    0x00013222      0x253 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-wbuf.o)
- .debug_line    0x00013475      0x196 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-sbrkr.o)
- .debug_line    0x0001360b      0x176 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-msizer.o)
- .debug_line    0x00013781      0x5f5 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-fvwrite.o)
- .debug_line    0x00013d76      0x51f /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-findfp.o)
- .debug_line    0x00014295      0x456 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-fflush.o)
- .debug_line    0x000146eb      0x1c9 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-fwalk.o)
- .debug_line    0x000148b4      0x2bd /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-wsetup.o)
- .debug_line    0x00014b71      0x27b /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-reent.o)
- .debug_line    0x00014dec      0x3b0 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-makebuf.o)
- .debug_line    0x0001519c      0x197 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-isattyr.o)
- .debug_line    0x00015333      0x22b /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-stdio.o)
- .debug_line    0x0001555e      0x196 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-closer.o)
- .debug_line    0x000156f4      0x19c /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-readr.o)
- .debug_line    0x00015890      0x215 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-fstatr.o)
- .debug_line    0x00015aa5      0x19d /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-lseekr.o)
- .debug_line    0x00015c42      0x19d /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-writer.o)
- .debug_line    0x00015ddf       0x72 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(close.o)
- .debug_line    0x00015e51      0x14e /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(fstat.o)
- .debug_line    0x00015f9f       0x73 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(isatty.o)
- .debug_line    0x00016012       0x73 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(lseek.o)
- .debug_line    0x00016085       0x72 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(read.o)
- .debug_line    0x000160f7       0x76 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(sbrk.o)
- .debug_line    0x0001616d       0x73 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(write.o)
+ .debug_line    0x0000b661     0x120f /workspaces/hoverboard-firmware-hack-FOC/build/util.o
+ .debug_line    0x0000c870      0x7cf /workspaces/hoverboard-firmware-hack-FOC/build/main.o
+ .debug_line    0x0000d03f      0x628 /workspaces/hoverboard-firmware-hack-FOC/build/bldc.o
+ .debug_line    0x0000d667      0x7b2 /workspaces/hoverboard-firmware-hack-FOC/build/eeprom.o
+ .debug_line    0x0000de19      0x289 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_it.o
+ .debug_line    0x0000e0a2       0x62 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller_data.o
+ .debug_line    0x0000e104     0x2254 /workspaces/hoverboard-firmware-hack-FOC/build/BLDC_controller.o
+ .debug_line    0x00010358       0x6f /workspaces/hoverboard-firmware-hack-FOC/build/startup_stm32f103xe.o
+ .debug_line    0x000103c7      0x234 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-sprintf.o)
+ .debug_line    0x000105fb       0xf4 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-strlen-stub.o)
+ .debug_line    0x000106ef       0xe7 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-impure.o)
+ .debug_line    0x000107d6      0x862 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-svfprintf.o)
+ .debug_line    0x00011038      0x11e /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-init.o)
+ .debug_line    0x00011156      0x1b1 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memset.o)
+ .debug_line    0x00011307      0x45c /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-mallocr.o)
+ .debug_line    0x00011763      0x2c8 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-freer.o)
+ .debug_line    0x00011a2b      0x20d /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memmove.o)
+ .debug_line    0x00011c38       0xbd /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memcpy.o)
+ .debug_line    0x00011cf5      0x1fa /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-reallocr.o)
+ .debug_line    0x00011eef      0x770 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf_i.o)
+ .debug_line    0x0001265f      0x153 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-mlock.o)
+ .debug_line    0x000127b2      0x200 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memchr-stub.o)
+ .debug_line    0x000129b2      0x1c0 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-printf.o)
+ .debug_line    0x00012b72      0x6b7 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf.o)
+ .debug_line    0x00013229      0x253 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-wbuf.o)
+ .debug_line    0x0001347c      0x196 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-sbrkr.o)
+ .debug_line    0x00013612      0x176 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-msizer.o)
+ .debug_line    0x00013788      0x5f5 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-fvwrite.o)
+ .debug_line    0x00013d7d      0x51f /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-findfp.o)
+ .debug_line    0x0001429c      0x456 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-fflush.o)
+ .debug_line    0x000146f2      0x1c9 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-fwalk.o)
+ .debug_line    0x000148bb      0x2bd /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-wsetup.o)
+ .debug_line    0x00014b78      0x27b /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-reent.o)
+ .debug_line    0x00014df3      0x3b0 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-makebuf.o)
+ .debug_line    0x000151a3      0x197 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-isattyr.o)
+ .debug_line    0x0001533a      0x22b /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-stdio.o)
+ .debug_line    0x00015565      0x196 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-closer.o)
+ .debug_line    0x000156fb      0x19c /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-readr.o)
+ .debug_line    0x00015897      0x215 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-fstatr.o)
+ .debug_line    0x00015aac      0x19d /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-lseekr.o)
+ .debug_line    0x00015c49      0x19d /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-writer.o)
+ .debug_line    0x00015de6       0x72 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(close.o)
+ .debug_line    0x00015e58      0x14e /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(fstat.o)
+ .debug_line    0x00015fa6       0x73 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(isatty.o)
+ .debug_line    0x00016019       0x73 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(lseek.o)
+ .debug_line    0x0001608c       0x72 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(read.o)
+ .debug_line    0x000160fe       0x76 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(sbrk.o)
+ .debug_line    0x00016174       0x73 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libnosys.a(write.o)
 
 .debug_str      0x00000000     0x6ed4
  .debug_str     0x00000000     0x6ed4 /workspaces/hoverboard-firmware-hack-FOC/build/stm32f1xx_hal_flash.o
