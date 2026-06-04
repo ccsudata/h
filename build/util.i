@@ -5605,7 +5605,7 @@ void handleTimeout(void) {
 
 void readCommand(void) {
     readInputRaw();
-
+    HAL_Delay(1);
 
       calcInputCmd(&input1[inIdx], INPUT_MIN, INPUT_MAX);
 
