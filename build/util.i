@@ -3,11 +3,6 @@
 # 0 "<built-in>"
 # 0 "<command-line>"
 # 1 "Src/util.c"
-# 0 "Src/util.c"
-# 1 "/workspaces/hoverboard-firmware-hack-FOC//"
-# 0 "<built-in>"
-# 0 "<command-line>"
-# 1 "Src/util.c"
 # 21 "Src/util.c"
 # 1 "/usr/include/newlib/stdio.h" 1 3
 # 29 "/usr/include/newlib/stdio.h" 3
@@ -36,7 +31,6 @@
 # 1 "/usr/include/newlib/sys/cdefs.h" 1 3
 # 45 "/usr/include/newlib/sys/cdefs.h" 3
 # 1 "/usr/include/newlib/machine/_default_types.h" 1 3
-# 41 "/usr/include/newlib/machine/_default_types.h" 3
 # 41 "/usr/include/newlib/machine/_default_types.h" 3
 
 # 41 "/usr/include/newlib/machine/_default_types.h" 3
@@ -940,6 +934,7 @@ _putchar_unlocked(int _c)
  return (__sputc_r(_ptr, _c, ((_ptr)->_stdout)));
 }
 # 801 "/usr/include/newlib/stdio.h" 3
+
 # 22 "Src/util.c" 2
 # 1 "/usr/include/newlib/stdlib.h" 1 3
 # 10 "/usr/include/newlib/stdlib.h" 3
@@ -1225,6 +1220,9 @@ void * aligned_alloc(size_t, size_t) __attribute__((__malloc__)) __attribute__((
 int at_quick_exit(void (*)(void));
 _Noreturn void
  quick_exit(int);
+
+
+
 # 23 "Src/util.c" 2
 # 1 "/usr/include/newlib/string.h" 1 3
 # 17 "/usr/include/newlib/string.h" 3
@@ -1271,6 +1269,8 @@ int strncasecmp(const char *, const char *, size_t) __attribute__((__pure__));
 
 int strcasecmp_l (const char *, const char *, locale_t);
 int strncasecmp_l (const char *, const char *, size_t, locale_t);
+
+
 # 25 "/usr/include/newlib/string.h" 2 3
 
 
@@ -1370,6 +1370,8 @@ char *strsignal (int __signo);
 # 175 "/usr/include/newlib/string.h" 3
 # 1 "/usr/include/newlib/sys/string.h" 1 3
 # 176 "/usr/include/newlib/string.h" 2 3
+
+
 # 24 "Src/util.c" 2
 # 1 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h" 1
 # 48 "Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h"
@@ -1382,7 +1384,6 @@ char *strsignal (int __signo);
 # 1 "Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h" 1
 # 151 "Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h"
 # 1 "Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xe.h" 1
-# 87 "Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xe.h"
 # 87 "Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xe.h"
 
 # 87 "Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xe.h"
@@ -1469,7 +1470,6 @@ typedef enum
 # 1 "Drivers/CMSIS/Include/core_cm3.h" 1
 # 44 "Drivers/CMSIS/Include/core_cm3.h"
 # 1 "/usr/lib/gcc/arm-none-eabi/13.2.1/include/stdint.h" 1 3 4
-# 34 "/usr/lib/gcc/arm-none-eabi/13.2.1/include/stdint.h" 3 4
 # 34 "/usr/lib/gcc/arm-none-eabi/13.2.1/include/stdint.h" 3 4
 
 # 34 "/usr/lib/gcc/arm-none-eabi/13.2.1/include/stdint.h" 3 4
@@ -5645,10 +5645,11 @@ void usart2_rx_check(void)
 void usart3_rx_check(void)
 {
   HAL_Delay(1);
+
   static uint32_t old_pos;
   uint32_t pos;
   pos = rx_buffer_R_len - ((huart3.hdmarx)->Instance->CNDTR);
-# 1197 "Src/util.c"
+# 1198 "Src/util.c"
   uint8_t *ptr;
   if (pos != old_pos) {
     ptr = (uint8_t *)&Sideboard_R_raw;
@@ -5673,7 +5674,7 @@ void usart3_rx_check(void)
   }
 
 }
-# 1321 "Src/util.c"
+# 1322 "Src/util.c"
 void usart_process_sideboard(SerialSideboard *Sideboard_in, SerialSideboard *Sideboard_out, uint8_t usart_idx)
 {
   uint16_t checksum;
@@ -5695,7 +5696,7 @@ void usart_process_sideboard(SerialSideboard *Sideboard_in, SerialSideboard *Sid
     }
   }
 }
-# 1351 "Src/util.c"
+# 1352 "Src/util.c"
 void sideboardLeds(uint8_t *leds) {
 
 
@@ -5863,9 +5864,9 @@ void sideboardSensors(uint8_t sensors) {
 
 
 }
-# 1527 "Src/util.c"
+# 1528 "Src/util.c"
 void saveConfig() {
-# 1536 "Src/util.c"
+# 1537 "Src/util.c"
     if (inp_cal_valid || cur_spd_valid) {
 
 
@@ -5940,16 +5941,16 @@ void poweroffPressCheck(void) {
       poweroff();
       }
     }
-# 1638 "Src/util.c"
+# 1639 "Src/util.c"
 }
-# 1658 "Src/util.c"
+# 1659 "Src/util.c"
 void filtLowPass32(int32_t u, uint16_t coef, int32_t *y) {
   int64_t tmp;
   tmp = ((int64_t)((u << 4) - (*y >> 12)) * coef) >> 4;
   tmp = (((tmp) > (2147483647LL)) ? (2147483647LL) : (((tmp) < (-2147483648LL)) ? (-2147483648LL) : (tmp)));
   *y = (int32_t)tmp + (*y);
 }
-# 1682 "Src/util.c"
+# 1683 "Src/util.c"
 void rateLimiter16(int16_t u, int16_t rate, int16_t *y) {
   int16_t q0;
   int16_t q1;
@@ -5992,7 +5993,7 @@ void mixerFcn(int16_t rtu_speed, int16_t rtu_steer, int16_t *rty_speedR, int16_t
     *rty_speedL = (int16_t)(tmp >> 4);
     *rty_speedL = (((*rty_speedL) > (INPUT_MAX)) ? (INPUT_MAX) : (((*rty_speedL) < (INPUT_MIN)) ? (INPUT_MIN) : (*rty_speedL)));
 }
-# 1734 "Src/util.c"
+# 1735 "Src/util.c"
 void multipleTapDet(int16_t u, uint32_t timeNow, MultipleTap *x) {
   uint8_t b_timeout;
   uint8_t b_hyst;
