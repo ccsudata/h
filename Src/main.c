@@ -538,8 +538,8 @@ uint32_t now = HAL_GetTick();
 
 if(now - lastSendTick >= 1000U)
 {
-    /* 等待上一轮DMA空闲，避免覆盖缓冲区 */
-    if(HAL_UART_GetState(&huart3) == HAL_UART_STATE_READY)
+    // 修改后：只检查发送状态是否为 READY（不影响接收）
+  if(huart3.gState == HAL_UART_STATE_READY)
     {
         static char buf[20];
         sprintf(buf,"%lu ms\r\n", now);
