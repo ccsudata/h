@@ -44,7 +44,7 @@
 #define __LFRACT_MAX__ 0X7FFFFFFFP-31LR
 #define __USA_FBIT__ 16
 #define __UINT_FAST8_MAX__ 0xffffffffU
-#define PRI_INPUT2 3,0,0,4095,0
+#define PRI_INPUT2 1,0,0,4095,0
 #define __FLT32_MAX_10_EXP__ 38
 #define __ARM_ARCH_4T__ 1
 #define __INT8_C(c) c
@@ -386,7 +386,7 @@
 #define __PTRDIFF_TYPE__ int
 #define __LLFRACT_MIN__ (-0.5LLR-0.5LLR)
 #define __DA_FBIT__ 31
-#define PRI_INPUT1 3,0,0,4095,0
+#define PRI_INPUT1 1,0,0,4095,0
 #define __UINT32_TYPE__ long unsigned int
 #define __FLT32X_MIN_10_EXP__ (-307)
 #define __UINTPTR_TYPE__ unsigned int
