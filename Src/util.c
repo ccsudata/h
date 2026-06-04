@@ -5644,7 +5644,7 @@ void usart2_rx_check(void)
 
 void usart3_rx_check(void)
 {
-
+  HAL_Delay(1);
   static uint32_t old_pos;
   uint32_t pos;
   pos = rx_buffer_R_len - ((huart3.hdmarx)->Instance->CNDTR);
