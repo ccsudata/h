@@ -532,8 +532,24 @@ int main(void) {
             Feedback.checksum   = (uint16_t)(Feedback.start ^ Feedback.cmd1 ^ Feedback.cmd2 ^ Feedback.speedR_meas ^ Feedback.speedL_meas 
                                            ^ Feedback.batVoltage ^ Feedback.boardTemp ^ Feedback.cmdLed);
 
-            HAL_UART_Transmit_DMA(&huart3, (uint8_t *)&Feedback, sizeof(Feedback));
-          }
+            //HAL_UART_Transmit_DMA(&huart3, (uint8_t *)&Feedback, sizeof(Feedback));
+            static uint32_t lastSendTick = 0;
+uint32_t now = HAL_GetTick();
+
+if(now - lastSendTick >= 1000U)
+{
+    /* 等待上一轮DMA空闲，避免覆盖缓冲区 */
+    if(HAL_UART_GetState(&huart3) == HAL_UART_STATE_READY)
+    {
+        static char buf[20];
+        sprintf(buf,"%lu ms\r\n", now);
+        HAL_UART_Transmit_DMA(&huart3, (uint8_t *)buf, strlen(buf));
+        lastSendTick = now;
+    }
+}
+
+            
+           }
         #endif
       }
     #endif
