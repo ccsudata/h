@@ -535,17 +535,42 @@ int main(void) {
             //HAL_UART_Transmit_DMA(&huart3, (uint8_t *)&Feedback, sizeof(Feedback));
 static uint32_t lastSendTick = 0;
 uint32_t now = HAL_GetTick();
-if(now - lastSendTick >= 1000U){
-  if(huart3.gState == HAL_UART_STATE_READY){// 修改后：只检查发送状态是否为 READY（不影响接收）
-        static char buf[64];
-        
-        sprintf(buf,"%lums L%s R%s B%s T%s [%s]\r\n", now,Feedback.speedL_meas,Feedback.speedR_meas,Feedback.batVoltage,Feedback.boardTemp,get_usart3_rx_latest(20));
 
-        HAL_UART_Transmit_DMA(&huart3, (uint8_t *)buf, strlen(buf));
+if (now - lastSendTick >= 1000U) {
+    // 确保 UART 处于 READY 状态，且 DMA 没有在忙
+    if (huart3.gState == HAL_UART_STATE_READY && huart3.hdmatx->State == HAL_DMA_STATE_READY) {
+        
+        // 1. 扩容 buf，防止多参数组合后溢出（建议至少 128 字节）
+        static char buf[128]; 
+        
+        // 2. 正确调用函数，传入长度变量的地址
+        uint32_t rx_len = 0;
+        const char *rx_str = (const char *)get_usart3_rx_latest(&rx_len);
+        
+        // 3. 安全防护：如果返回了空指针，或者长度为0，给一个默认提示字符串，防止 sprintf 崩溃
+        if (rx_str == NULL || rx_len == 0) {
+            rx_str = "";
+        }
+
+        // 4. 检查你的 Feedback 成员类型！
+        // 如果它们是 float/int，请把 %s 改为 %d 或 %.2f
+        // 这里假设它们已经是字符串(char*)。如果不是，请务必改掉 %s
+        int written = snprintf(buf, sizeof(buf), "%lums L%s R%s B%s T%s [%s]\r\n", 
+                               now,
+                               Feedback.speedL_meas, 
+                               Feedback.speedR_meas, 
+                               Feedback.batVoltage, 
+                               Feedback.boardTemp, 
+                               rx_str);
+
+        // 5. 确保写入成功且没有被截断，再启动 DMA 发送
+        if (written > 0 && written < sizeof(buf)) {
+            HAL_UART_Transmit_DMA(&huart3, (uint8_t *)buf, written);
+        }
+        
         lastSendTick = now;
     }
 }
-
             
            }
         #endif
