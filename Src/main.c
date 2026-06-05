@@ -537,33 +537,43 @@ static uint32_t lastSendTick = 0;
 uint32_t now = HAL_GetTick();
 
 if (now - lastSendTick >= 1000U) {
-    // 确保 UART 处于 READY 状态，且 DMA 没有在忙
     if (huart3.gState == HAL_UART_STATE_READY && huart3.hdmatx->State == HAL_DMA_STATE_READY) {
         
-        // 1. 扩容 buf，防止多参数组合后溢出（建议至少 128 字节）
-        static char buf[128]; 
+        // 1. 扩容缓冲区，确保容纳转换后的长字符串
+        static char buf[192]; 
         
-        // 2. 正确调用函数，传入长度变量的地址
+        // 2. 正确获取串口 3 接收到的原始二进制数据
         uint32_t rx_len = 0;
-        const char *rx_str = (const char *)get_usart3_rx_latest(&rx_len);
+        const uint8_t *rx_data = get_usart3_rx_latest(&rx_len);
         
-        // 3. 安全防护：如果返回了空指针，或者长度为0，给一个默认提示字符串，防止 sprintf 崩溃
-        if (rx_str == NULL || rx_len == 0) {
-            rx_str = "";
+        // 3. 将接收到的二进制 hex 数据安全地转化为可见字符 hex 字符串
+        char rx_hex_str[32] = {0}; 
+        if (rx_data != NULL && rx_len > 0) {
+            int p = 0;
+            // 最多打印前 8 个字节，防止数据太长塞满 buf
+            uint32_t max_bytes = (rx_len > 8) ? 8 : rx_len; 
+            for (uint32_t i = 0; i < max_bytes; i++) {
+                p += snprintf(rx_hex_str + p, sizeof(rx_hex_str) - p, "%02X ", rx_data[i]);
+            }
+            if (rx_len > 8) {
+                snprintf(rx_hex_str + p - 1, sizeof(rx_hex_str) - p + 1, ".."); // 超过 8 字节加省略号
+            }
+        } else {
+            snprintf(rx_hex_str, sizeof(rx_hex_str), "");
         }
 
-        // 4. 检查你的 Feedback 成员类型！
-        // 如果它们是 float/int，请把 %s 改为 %d 或 %.2f
-        // 这里假设它们已经是字符串(char*)。如果不是，请务必改掉 %s
-        int written = snprintf(buf, sizeof(buf), "%lums L%s R%s B%s T%s [%s]\r\n", 
-                               now,
-                               Feedback.speedL_meas, 
-                               Feedback.speedR_meas, 
-                               Feedback.batVoltage, 
-                               Feedback.boardTemp, 
-                               rx_str);
+        // 4. 【关键核心】将原本错误的 %s 全部修正为 %d
+        // 提示：如果你的固件修改过、某些物理量是浮点数，请将 %d 改为 %.2f
+        int written = snprintf(buf, sizeof(buf), 
+                               "%lums L:%d R:%d V:%d T:%d [%s]\r\n", 
+                               (unsigned long)now,
+                               (int)Feedback.speedL_meas, 
+                               (int)Feedback.speedR_meas, 
+                               (int)Feedback.batVoltage, 
+                               (int)Feedback.boardTemp, 
+                               rx_hex_str);
 
-        // 5. 确保写入成功且没有被截断，再启动 DMA 发送
+        // 5. 安全触发 DMA 发送
         if (written > 0 && written < sizeof(buf)) {
             HAL_UART_Transmit_DMA(&huart3, (uint8_t *)buf, written);
         }
