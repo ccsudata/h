@@ -94,6 +94,7 @@ void handleTimeout(void);
 void readCommand(void);
 void usart2_rx_check(void);
 void usart3_rx_check(void);
+const uint8_t *get_usart3_rx_latest(uint32_t *len);
 #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
 void usart_process_debug(uint8_t *userCommand, uint32_t len);
 #endif

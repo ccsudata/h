@@ -157,6 +157,8 @@ static uint32_t Sideboard_L_len = sizeof(Sideboard_L);
 #if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
 static uint8_t  rx_buffer_R[SERIAL_BUFFER_SIZE];      // USART Rx DMA circular buffer
 static uint32_t rx_buffer_R_len = ARRAY_LEN(rx_buffer_R);
+static uint8_t  rx_buffer_R_latest[SERIAL_BUFFER_SIZE]; // Latest contiguous RX chunk
+static uint32_t rx_buffer_R_latest_len = 0;
 #endif
 #if defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
 static uint16_t timeoutCntSerial_R = SERIAL_TIMEOUT;  // Timeout counter for Rx Serial command
@@ -1163,6 +1165,21 @@ void usart3_rx_check(void)
   static uint32_t old_pos;
   uint32_t pos;  
   pos = rx_buffer_R_len - __HAL_DMA_GET_COUNTER(huart3.hdmarx);         // Calculate current position in buffer
+
+  if (pos != old_pos) {
+    uint32_t len;
+    if (pos > old_pos) {
+      len = pos - old_pos;
+      memcpy(rx_buffer_R_latest, &rx_buffer_R[old_pos], len);
+    } else {
+      len = rx_buffer_R_len - old_pos + pos;
+      memcpy(rx_buffer_R_latest, &rx_buffer_R[old_pos], rx_buffer_R_len - old_pos);
+      if (pos > 0) {
+        memcpy(rx_buffer_R_latest + rx_buffer_R_len - old_pos, &rx_buffer_R[0], pos);
+      }
+    }
+    rx_buffer_R_latest_len = len;
+  }
   #endif
 
   #if defined(DEBUG_SERIAL_USART3)
@@ -1219,6 +1236,16 @@ void usart3_rx_check(void)
   }
   #endif
 }
+
+#if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
+const uint8_t *get_usart3_rx_latest(uint32_t *len)
+{
+  if (len != NULL) {
+    *len = rx_buffer_R_latest_len;
+  }
+  return rx_buffer_R_latest;
+}
+#endif
 
 /*
  * Process Rx debug user command input

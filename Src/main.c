@@ -537,8 +537,10 @@ static uint32_t lastSendTick = 0;
 uint32_t now = HAL_GetTick();
 if(now - lastSendTick >= 1000U){
   if(huart3.gState == HAL_UART_STATE_READY){// 修改后：只检查发送状态是否为 READY（不影响接收）
-        static char buf[20];
-        sprintf(buf,"%lu ms\r\n", now);
+        static char buf[64];
+        
+        sprintf(buf,"%lums L%s R%s B%s T%s [%s]\r\n", now,Feedback.speedL_meas,Feedback.speedR_meas,Feedback.batVoltage,Feedback.boardTemp,get_usart3_rx_latest(20));
+
         HAL_UART_Transmit_DMA(&huart3, (uint8_t *)buf, strlen(buf));
         lastSendTick = now;
     }
