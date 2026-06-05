@@ -5690,19 +5690,21 @@ void usart3_rx_check(void)
 
 const uint8_t *get_usart3_rx_latest(uint32_t *len)
 {
+  const uint8_t *result = rx_buffer_R_latest;
   if (len != 
-# 1243 "Src/util.c" 3 4
+# 1244 "Src/util.c" 3 4
             ((void *)0)
-# 1243 "Src/util.c"
+# 1244 "Src/util.c"
                 ) {
     *len = rx_buffer_R_latest_len;
   }
-  return rx_buffer_R_latest;
+  rx_buffer_R_latest_len = 0;
+  return result;
 }
-# 1297 "Src/util.c"
+# 1299 "Src/util.c"
 void usart_process_command(SerialCommand *command_in, SerialCommand *command_out, uint8_t usart_idx)
 {
-# 1322 "Src/util.c"
+# 1324 "Src/util.c"
   uint16_t checksum;
   if (command_in->start == 0xABCD) {
     checksum = (uint16_t)(command_in->start ^ command_in->steer ^ command_in->speed);
@@ -5723,9 +5725,9 @@ void usart_process_command(SerialCommand *command_in, SerialCommand *command_out
   }
 
 }
-# 1379 "Src/util.c"
+# 1381 "Src/util.c"
 void sideboardLeds(uint8_t *leds) {
-# 1445 "Src/util.c"
+# 1447 "Src/util.c"
 }
 
 
@@ -5734,11 +5736,11 @@ void sideboardLeds(uint8_t *leds) {
 
 
 void sideboardSensors(uint8_t sensors) {
-# 1545 "Src/util.c"
+# 1547 "Src/util.c"
 }
-# 1555 "Src/util.c"
+# 1557 "Src/util.c"
 void saveConfig() {
-# 1564 "Src/util.c"
+# 1566 "Src/util.c"
     if (inp_cal_valid || cur_spd_valid) {
 
 
@@ -5813,16 +5815,16 @@ void poweroffPressCheck(void) {
       poweroff();
       }
     }
-# 1666 "Src/util.c"
+# 1668 "Src/util.c"
 }
-# 1686 "Src/util.c"
+# 1688 "Src/util.c"
 void filtLowPass32(int32_t u, uint16_t coef, int32_t *y) {
   int64_t tmp;
   tmp = ((int64_t)((u << 4) - (*y >> 12)) * coef) >> 4;
   tmp = (((tmp) > (2147483647LL)) ? (2147483647LL) : (((tmp) < (-2147483648LL)) ? (-2147483648LL) : (tmp)));
   *y = (int32_t)tmp + (*y);
 }
-# 1710 "Src/util.c"
+# 1712 "Src/util.c"
 void rateLimiter16(int16_t u, int16_t rate, int16_t *y) {
   int16_t q0;
   int16_t q1;
@@ -5865,7 +5867,7 @@ void mixerFcn(int16_t rtu_speed, int16_t rtu_steer, int16_t *rty_speedR, int16_t
     *rty_speedL = (int16_t)(tmp >> 4);
     *rty_speedL = (((*rty_speedL) > (INPUT_MAX)) ? (INPUT_MAX) : (((*rty_speedL) < (INPUT_MIN)) ? (INPUT_MIN) : (*rty_speedL)));
 }
-# 1762 "Src/util.c"
+# 1764 "Src/util.c"
 void multipleTapDet(int16_t u, uint32_t timeNow, MultipleTap *x) {
   uint8_t b_timeout;
   uint8_t b_hyst;
