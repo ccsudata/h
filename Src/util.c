@@ -1240,10 +1240,12 @@ void usart3_rx_check(void)
 #if defined(DEBUG_SERIAL_USART3) || defined(CONTROL_SERIAL_USART3) || defined(SIDEBOARD_SERIAL_USART3)
 const uint8_t *get_usart3_rx_latest(uint32_t *len)
 {
+  const uint8_t *result = rx_buffer_R_latest;
   if (len != NULL) {
     *len = rx_buffer_R_latest_len;
   }
-  return rx_buffer_R_latest;
+  rx_buffer_R_latest_len = 0;
+  return result;
 }
 #endif
 

@@ -551,11 +551,12 @@ if (now - lastSendTick >= 1000U) {
         if (rx_data != NULL && rx_len > 0) {
             int p = 0;
             // 最多打印前 8 个字节，防止数据太长塞满 buf
-            uint32_t max_bytes = (rx_len > 8) ? 8 : rx_len; 
+            #define MAX_RX_BYTES_TO_PRINT 12
+            uint32_t max_bytes = (rx_len > MAX_RX_BYTES_TO_PRINT) ? MAX_RX_BYTES_TO_PRINT : rx_len; 
             for (uint32_t i = 0; i < max_bytes; i++) {
                 p += snprintf(rx_hex_str + p, sizeof(rx_hex_str) - p, "%02X ", rx_data[i]);
             }
-            if (rx_len > 8) {
+            if (rx_len > MAX_RX_BYTES_TO_PRINT) {
                 snprintf(rx_hex_str + p - 1, sizeof(rx_hex_str) - p + 1, ".."); // 超过 8 字节加省略号
             }
         } else {
