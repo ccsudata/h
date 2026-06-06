@@ -1,5 +1,5 @@
 # 0 "Src/util.c"
-# 1 "/workspaces/hoverboard-firmware-hack-FOC//"
+# 1 "/workspaces/h//"
 # 0 "<built-in>"
 # 0 "<command-line>"
 # 1 "Src/util.c"
@@ -5054,8 +5054,8 @@ ExtY rtY_Right;
 uint8_t inIdx = 0;
 uint8_t inIdx_prev = 0;
 
-InputStruct input1[2] = { {0, 0, 0, 1, 1000, 0, 2500, 0}, {0, 0, 0, 2, -1000, 0, 1000, 0} };
-InputStruct input2[2] = { {0, 0, 0, 1, -1000, 0, 1000, 0}, {0, 0, 0, 2, -1000, 0, 1000, 0} };
+InputStruct input1[2] = { {0, 0, 0, 2, 1000, 0, 2500, 0}, {0, 0, 0, 2, -1000, 0, 1000, 0} };
+InputStruct input2[2] = { {0, 0, 0, 2, -1000, 0, 1000, 0}, {0, 0, 0, 2, -1000, 0, 1000, 0} };
 
 
 
@@ -5090,7 +5090,7 @@ static uint8_t rx_buffer_R_latest[64];
 static uint32_t rx_buffer_R_latest_len = 0;
 
 
-static uint16_t timeoutCntSerial_R = 160;
+static uint16_t timeoutCntSerial_R = 210;
 static uint8_t timeoutFlgSerial_R = 0;
 # 183 "Src/util.c"
 static SerialCommand commandR;
@@ -5569,9 +5569,9 @@ void handleTimeout(void) {
       }
     }
 # 986 "Src/util.c"
-      if (timeoutCntSerial_R++ >= 160) {
+      if (timeoutCntSerial_R++ >= 210) {
         timeoutFlgSerial_R = 1;
-        timeoutCntSerial_R = 160;
+        timeoutCntSerial_R = 210;
 
 
 
