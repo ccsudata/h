@@ -113,8 +113,9 @@ LoopFillZerobss:
   bcc FillZerobss
 
 /* 【魔改核心 2】移除原先此处的 bl SystemInit */
+/* 直接绕过 __libc_init_array，避免 GD32 上的空/野初始化指针触发 HardFault */
 /* Call static constructors */
-  bl __libc_init_array
+/* bl __libc_init_array */
 /* Call the application's entry point.*/
   bl main
   bx lr
