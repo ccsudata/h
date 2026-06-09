@@ -3,8 +3,8 @@
 **
 **  File        : GD32E103RBT6_FLASH.ld
 **
-**  Abstract    : Linker script for GD32E103RBT6 device with
-**                128KByte FLASH, 32KByte RAM.
+**  Abstract    : Linker script for the 64KByte FLASH / 20KByte RAM
+**                variant used by the board under test.
 **
 **                This keeps the firmware layout compatible with the
 **                GD32E103RBT6 mainboard while reusing the existing
@@ -17,7 +17,7 @@
 ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
-_estack = 0x20008000;    /* end of 32K RAM */
+_estack = 0x20005000;    /* end of 20K RAM */
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0x200;
 _Min_Stack_Size = 0x400;
@@ -25,8 +25,8 @@ _Min_Stack_Size = 0x400;
 /* Specify the memory areas */
 MEMORY
 {
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 32K
-FLASH (rx)     : ORIGIN = 0x08000000, LENGTH = 128K
+RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 20K
+FLASH (rx)     : ORIGIN = 0x08000000, LENGTH = 64K
 }
 
 /* Define output sections */
