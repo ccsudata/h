@@ -2,6 +2,7 @@
 # target
 ######################################
 TARGET = hover
+CHIP ?= GD32E103RBT6
 
 ######################################
 # building variables
@@ -88,7 +89,8 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F103xE
+-DSTM32F103xE \
+-D$(CHIP)
 
 
 # AS includes
@@ -127,7 +129,10 @@ endif
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F103RCTx_FLASH.ld
+LDSCRIPT ?= STM32F103RCTx_FLASH.ld
+ifeq ($(CHIP),GD32E103RBT6)
+LDSCRIPT = GD32E103RBT6_FLASH.ld
+endif
 
 # libraries
 LIBS = -lc -lm -lnosys

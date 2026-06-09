@@ -5,6 +5,9 @@ set -euo pipefail
 
 # 编译变体选择（可通过环境变量或命令行参数设置）
 VARIANT="${1:-VARIANT_HOVERCAR}"
+# 目标芯片默认切换到 GD32E103RBT6，便于适配这类 GD32 主控。
+TARGET_CHIP="${TARGET_CHIP:-GD32E103RBT6}"
+#TARGET_CHIP="${TARGET_CHIP:-STM32F103xE}"
 # 在此处定义您的额外宏，例如开启双输入模式
 # 默认：双输入，PB11(USART3) 作为主输入（优先），ADC 作为第二输入
 # 通过预处理宏显式设置 PRI 输入类型为 ADC（TYPE=3）且范围为 0-4095，避免自动类型检测
@@ -27,7 +30,7 @@ for tool in arm-none-eabi-gcc arm-none-eabi-objcopy arm-none-eabi-size make; do
     fi
 done
 
-echo "编译变体: $VARIANT (STM32F103RCT6)"
+echo "编译变体: $VARIANT ($TARGET_CHIP)"
 echo "附加标志: $EXTRA_CFLAGS"
 echo "编译目录: $BUILD_DIR"
 echo ""
@@ -45,7 +48,7 @@ make clean 2>/dev/null || true
 # 编译指定变体 (此处将 EXTRA_CFLAGS 传入 make)
 echo ""
 echo "编译中 (VARIANT=$VARIANT)..."
-if VARIANT="$VARIANT" EXTRA_CFLAGS="$EXTRA_CFLAGS" make BUILD_DIR="$BUILD_DIR" all 2>&1; then
+if VARIANT="$VARIANT" TARGET_CHIP="$TARGET_CHIP" EXTRA_CFLAGS="$EXTRA_CFLAGS" make BUILD_DIR="$BUILD_DIR" all 2>&1; then
     echo ""
     echo "=== 编译完成 ==="
     echo "输出文件:"
@@ -64,10 +67,10 @@ if VARIANT="$VARIANT" EXTRA_CFLAGS="$EXTRA_CFLAGS" make BUILD_DIR="$BUILD_DIR" a
             -IDrivers/STM32F1xx_HAL_Driver/Inc/Legacy \
             -IDrivers/CMSIS/Device/ST/STM32F1xx/Include \
             -IDrivers/CMSIS/Include \
-            -DUSE_HAL_DRIVER -DSTM32F103xE -D$VARIANT $EXTRA_CFLAGS -xc /dev/null > "$MACRO_FILE" 2>/dev/null || true
+            -DUSE_HAL_DRIVER -DSTM32F103xE -DGD32E103RBT6 -D$VARIANT $EXTRA_CFLAGS -xc /dev/null > "$MACRO_FILE" 2>/dev/null || true
     echo "已生成宏清单: $MACRO_FILE"
     echo "---- 相关宏摘要 ----"
-    grep -E "VARIANT|DEBUG_|FEEDBACK|CONTROL_|SIDEBOARD|PRI_INPUT|DEBUG_SERIAL|FEEDBACK_SERIAL|VARIANT_HOVERCAR|VARIANT_USART|DUAL_INPUTS|USE_HAL_DRIVER|STM32F103xE" "$MACRO_FILE" || true
+    grep -E "VARIANT|DEBUG_|FEEDBACK|CONTROL_|SIDEBOARD|PRI_INPUT|DEBUG_SERIAL|FEEDBACK_SERIAL|VARIANT_HOVERCAR|VARIANT_USART|DUAL_INPUTS|USE_HAL_DRIVER|STM32F103xE|GD32E103RBT6" "$MACRO_FILE" || true
     echo "--------------------"
 else
     echo ""
