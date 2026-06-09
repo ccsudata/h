@@ -52,7 +52,7 @@ Src/BLDC_controller.c
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32f103xe.s
+startup_stm32f103xb.s
 
 #######################################
 # binaries
