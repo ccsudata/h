@@ -224,6 +224,14 @@ void SystemInit(void) {
 #else
   SCB->VTOR  = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH. */
 #endif
+
+  /* =================【针对 GD32 Flash 的强力补丁】================= */
+  /* 1. 显式把 Flash 延迟设到 1 个等待周期，避免 M4 读取 Flash 时错位。 */
+  FLASH->ACR &= ~(FLASH_ACR_LATENCY);
+  FLASH->ACR |= FLASH_ACR_LATENCY_1;
+
+  /* 2. 强制开启 Flash 预取缓冲区，确保 .init_array 等表项稳定读出。 */
+  FLASH->ACR |= FLASH_ACR_PRFTBE;
 }
 
 /**
