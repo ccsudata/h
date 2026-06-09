@@ -77,8 +77,13 @@ defined in linker script */
   .weak Reset_Handler
   .type Reset_Handler, %function
 Reset_Handler:
+  ldr   r0, =_estack
+  mov   sp, r0          /* 1. 先强行初始化栈指针 */
 
-/* Copy the data segment initializers from flash to SRAM */
+/* 【魔改核心 1】提前调用 SystemInit，优先把 GD32 的外设和内存时钟全部唤醒 */
+  bl  SystemInit
+
+/* 2. 此时内存已经安全解锁，再开始安全地拷贝 data 段 */
   movs r1, #0
   b LoopCopyDataInit
 
@@ -96,7 +101,8 @@ LoopCopyDataInit:
   bcc CopyDataInit
   ldr r2, =_sbss
   b LoopFillZerobss
-/* Zero fill the bss segment. */
+
+/* 3. 填零 bss 段 */
 FillZerobss:
   movs r3, #0
   str r3, [r2], #4
@@ -106,10 +112,9 @@ LoopFillZerobss:
   cmp r2, r3
   bcc FillZerobss
 
-/* Call the clock system intitialization function.*/
-    bl  SystemInit
+/* 【魔改核心 2】移除原先此处的 bl SystemInit */
 /* Call static constructors */
-    bl __libc_init_array
+  bl __libc_init_array
 /* Call the application's entry point.*/
   bl main
   bx lr
@@ -210,6 +215,9 @@ g_pfnVectors:
   .word 0
   .word BootRAM          /* @0x108. This is for boot in RAM mode for
                             STM32F10x Medium Density devices. */
+  /* 强行多垫一些空向量，对齐 GD32E103 的硬件中断寄存器边界 */
+  .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  .word 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 /*******************************************************************************
 *
