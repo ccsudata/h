@@ -87,9 +87,12 @@ BIN = $(CP) -O binary -S
 #######################################
 # cpu
 CPU = -mcpu=cortex-m3
+ifeq ($(CHIP),GD32E103RBT6)
+CPU = -mcpu=cortex-m4
+endif
 
 # fpu
-# NONE for Cortex-M0/M0+/M3
+# NONE for Cortex-M0/M0+/M3/M4
 
 # float-abi
 
