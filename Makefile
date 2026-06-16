@@ -2,7 +2,22 @@
 # target
 ######################################
 TARGET = hover
-CHIP ?= GD32E103RBT6
+CHIP ?= STM32F103xE
+ifneq ($(TARGET_CHIP),)
+CHIP := $(TARGET_CHIP)
+endif
+
+# When compiling for GD32 targets, the STM32 HAL device header still expects
+# the STM32F103xE macro. Define both the ST device macro and the GD32 target
+# macro so the HAL selects the right device while application code can still
+# detect GD32-specific branches.
+HAL_CHIP = $(CHIP)
+ifeq ($(CHIP),GD32E103RBT6)
+HAL_CHIP = STM32F103xE
+endif
+ifeq ($(CHIP),GD32F103RCT6)
+HAL_CHIP = STM32F103xE
+endif
 
 ######################################
 # building variables
@@ -89,8 +104,8 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F103xE \
--D$(CHIP)
+-D$(CHIP) \
+-D$(HAL_CHIP)
 
 
 # AS includes
@@ -132,6 +147,9 @@ endif
 LDSCRIPT ?= STM32F103RCTx_FLASH.ld
 ifeq ($(CHIP),GD32E103RBT6)
 LDSCRIPT = GD32E103RBT6_FLASH.ld
+endif
+ifeq ($(CHIP),GD32F103RCT6)
+LDSCRIPT = STM32F103RCTx_FLASH.ld
 endif
 
 # libraries
