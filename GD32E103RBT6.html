@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>GD32E103Rx 完整固件宏定义引脚图</title>
+<style>
+    body {
+        font-family: 'Consolas', 'Segoe UI', Tahoma, monospace;
+        background-color: #1e1e1e;
+        color: #fff;
+        margin: 0;
+        padding: 0;
+        overflow: auto; /* 允许滚动 */
+    }
+    .header {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        background: rgba(20, 20, 20, 0.9);
+        padding: 20px 40px;
+        z-index: 1000;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .header h1 { margin: 0; font-size: 24px; color: #4fc3f7; }
+    .header p { margin: 5px 0 0; color: #aaa; font-size: 14px;}
+    
+    /* 超大画布容器，保证充足的空间 */
+    .canvas-container {
+        position: relative;
+        width: 2400px;
+        height: 2400px;
+        margin: 100px auto; 
+    }
+
+    .chip-body {
+        position: absolute;
+        top: 800px; left: 800px; /* 居中 */
+        width: 800px; height: 800px;
+        background: #2a2a2a;
+        border-radius: 16px;
+        box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 20px 50px rgba(0,0,0,0.6);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 50;
+    }
+    .chip-body h2 { margin: 0; font-size: 64px; letter-spacing: 4px; color: #e0e0e0;}
+    .chip-body p { margin: 10px 0 0; color: #888; font-size: 32px; }
+    .dot {
+        position: absolute;
+        top: 40px; left: 40px;
+        width: 40px; height: 40px;
+        background: #111;
+        border-radius: 50%;
+        box-shadow: inset 4px 4px 10px rgba(0,0,0,0.8);
+    }
+
+    .pin {
+        position: absolute;
+        background: #d4af37; /* 金色 */
+        z-index: 10;
+    }
+    .pin-h { width: 40px; height: 16px; }
+    .pin-v { width: 16px; height: 40px; }
+
+    .label-container {
+        position: absolute;
+        white-space: nowrap;
+        font-size: 15px;
+        z-index: 100;
+    }
+
+    /* 文字样式 */
+    .pin-num { color: #888; font-weight: bold; margin: 0 4px; font-size: 16px;}
+    .base-name { color: #bbb; margin: 0 8px; }
+    .macro {
+        background-color: rgba(211, 47, 47, 0.15);
+        color: #ff5252;
+        padding: 4px 8px;
+        border: 1px solid rgba(255, 82, 82, 0.4);
+        border-radius: 4px;
+        font-weight: bold;
+        letter-spacing: 0.5px;
+    }
+    .macro-alt {
+        background-color: rgba(76, 175, 80, 0.15);
+        color: #69f0ae;
+        border-color: rgba(105, 240, 174, 0.4);
+    }
+</style>
+</head>
+<body>
+
+    <div class="canvas-container" id="canvas">
+        <div class="chip-body">
+            <div class="dot"></div>
+            <h2>GD32E103Rx</h2>
+            <p>LQFP64</p>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    
+    // 从 C 文件中提取的所有定义
+    const pinData = {
+        1: { base: "VBAT", macros: [] },
+        2: { base: "PC13-TAMPER-RTC", macros: ["BUZZER_V1"] },
+        3: { base: "PC14-OSC32IN", macros: [] },
+        4: { base: "PC15-OSC32OUT", macros: ["OFF_V1"] },
+        5: { base: "PD0-OSCIN", macros: [] },
+        6: { base: "PD1-OSCOUT", macros: [] },
+        7: { base: "NRST", macros: [] },
+        8: { base: "PC0", macros: ["LEFT_DC_CUR"] },
+        9: { base: "PC1", macros: ["RIGHT_DC_CUR"] },
+        10: { base: "PC2", macros: ["DCLINK_V0"] },
+        11: { base: "PC3", macros: ["LEFT_V_CUR"] },
+        12: { base: "VSSA", macros: [] },
+        13: { base: "VDDA", macros: [] },
+        14: { base: "PA0-WKUP", macros: ["LEFT_U_CUR"] },
+        15: { base: "PA1", macros: ["DCLINK_V1", "BUTTON_V0"] },
+        16: { base: "PA2", macros: ["PWM_L_CH1 / BTN1_L"] },
+        17: { base: "PA3", macros: ["PPM_L", "PWM_L_CH2 / BTN2_L"] },
+        18: { base: "VSS_4", macros: [] },
+        19: { base: "VDD_4", macros: [] },
+        20: { base: "PA4", macros: ["BUZZER_V0"] },
+        21: { base: "PA5", macros: ["OFF_V0"] },
+        22: { base: "PA6", macros: [] },
+        23: { base: "PA7", macros: ["LEFT_TIM_UL"] },
+        24: { base: "PC4", macros: ["RIGHT_U_CUR"] },
+        25: { base: "PC5", macros: ["RIGHT_V_CUR"] },
+        26: { base: "PB0", macros: ["LEFT_TIM_VL"] },
+        27: { base: "PB1", macros: ["LEFT_TIM_WL"] },
+        28: { base: "PB2", macros: ["LED"] },
+        29: { base: "PB10", macros: ["PWM_R_CH1 / BTN1_R"] },
+        30: { base: "PB11", macros: ["PPM_R", "PWM_R_CH2 / BTN2_R"] },
+        31: { base: "VSS_1", macros: [] },
+        32: { base: "VDD_1", macros: [] },
+        33: { base: "PB12", macros: [] },
+        34: { base: "PB13", macros: ["RIGHT_TIM_UL"] },
+        35: { base: "PB14", macros: ["RIGHT_TIM_VL"] },
+        36: { base: "PB15", macros: ["RIGHT_TIM_WL"] },
+        37: { base: "PC6", macros: ["LEFT_TIM_UH"] },
+        38: { base: "PC7", macros: ["LEFT_TIM_VH"] },
+        39: { base: "PC8", macros: ["LEFT_TIM_WH"] },
+        40: { base: "PC9", macros: [] },
+        41: { base: "PA8", macros: ["RIGHT_TIM_UH"] },
+        42: { base: "PA9", macros: ["RIGHT_TIM_VH"] },
+        43: { base: "PA10", macros: ["RIGHT_TIM_WH"] },
+        44: { base: "PA11", macros: ["CHARGER_V1"] },
+        45: { base: "PA12", macros: ["CHARGER_V0"] },
+        46: { base: "PA13", macros: [] },
+        47: { base: "VSS_2", macros: [] },
+        48: { base: "VDD_2", macros: [] },
+        49: { base: "PA14", macros: [] },
+        50: { base: "PA15", macros: [] },
+        51: { base: "PC10", macros: ["RIGHT_HALL_U"] },
+        52: { base: "PC11", macros: ["RIGHT_HALL_V"] },
+        53: { base: "PC12", macros: ["RIGHT_HALL_W"] },
+        54: { base: "PD2", macros: [] },
+        55: { base: "PB3", macros: [] },
+        56: { base: "PB4", macros: [] },
+        57: { base: "PB5", macros: ["LEFT_HALL_U"] },
+        58: { base: "PB6", macros: ["LEFT_HALL_V"] },
+        59: { base: "PB7", macros: ["LEFT_HALL_W"] },
+        60: { base: "BOOT0", macros: [] },
+        61: { base: "PB8", macros: [] },
+        62: { base: "PB9", macros: ["BUTTON_V1"] },
+        63: { base: "VSS_3", macros: [] },
+        64: { base: "VDD_3", macros: [] }
+    };
+
+    const chipSize = 800; // 芯片大小
+    const offset = 800;   // 芯片左上角在画布中的位置
+    const spacing = chipSize / 17; // 16个引脚，均分为17份
+
+    for (let i = 1; i <= 64; i++) {
+        const data = pinData[i];
+        let cx = 0, cy = 0; // 引脚在画布中的中心坐标
+        let isLeft = false;
+
+        const pin = document.createElement('div');
+        const label = document.createElement('div');
+        label.className = 'label-container';
+
+        // 生成带格式的 HTML (左侧反转顺序以保持数字贴近芯片)
+        if (i >= 1 && i <= 16) isLeft = true;
+        if (i >= 49 && i <= 64) isLeft = true; // 顶部由于旋转，反转DOM也能让数字靠着芯片
+
+        let labelHTML = `<div style="display:flex; align-items:center; ${isLeft ? 'flex-direction:row-reverse;' : ''}">`;
+        labelHTML += `<span class="pin-num">${i}</span>`;
+        labelHTML += `<span class="base-name">${data.base}</span>`;
+        data.macros.forEach((m, idx) => {
+            const mClass = idx % 2 === 0 ? 'macro' : 'macro macro-alt';
+            labelHTML += `<span class="${mClass}" style="${isLeft ? 'margin-right:6px;' : 'margin-left:6px;'}">${m}</span>`;
+        });
+        labelHTML += `</div>`;
+        label.innerHTML = labelHTML;
+
+        if (i >= 1 && i <= 16) { 
+            // 左侧引脚
+            pin.className = 'pin pin-h';
+            cy = offset + i * spacing;
+            cx = offset - 20; 
+            pin.style.top = (cy - 8) + 'px';
+            pin.style.left = (offset - 40) + 'px';
+
+            label.style.right = (2400 - offset + 50) + 'px';
+            label.style.top = cy + 'px';
+            label.style.transform = 'translateY(-50%)';
+
+        } else if (i >= 17 && i <= 32) { 
+            // 底部引脚
+            pin.className = 'pin pin-v';
+            cx = offset + (i - 16) * spacing;
+            cy = offset + chipSize + 20;
+            pin.style.left = (cx - 8) + 'px';
+            pin.style.top = (offset + chipSize) + 'px';
+
+            label.style.left = cx + 'px';
+            label.style.top = (cy + 30) + 'px';
+            label.style.transformOrigin = '0 50%';
+            label.style.transform = 'translateY(-50%) rotate(90deg)'; // 向下延伸
+
+        } else if (i >= 33 && i <= 48) { 
+            // 右侧引脚
+            pin.className = 'pin pin-h';
+            cy = offset + (49 - i) * spacing;
+            cx = offset + chipSize + 20;
+            pin.style.top = (cy - 8) + 'px';
+            pin.style.left = (offset + chipSize) + 'px';
+
+            label.style.left = (cx + 30) + 'px';
+            label.style.top = cy + 'px';
+            label.style.transform = 'translateY(-50%)';
+
+        } else if (i >= 49 && i <= 64) { 
+            // 顶部引脚
+            pin.className = 'pin pin-v';
+            cx = offset + (65 - i) * spacing;
+            cy = offset - 20;
+            pin.style.left = (cx - 8) + 'px';
+            pin.style.top = (offset - 40) + 'px';
+
+            label.style.left = cx + 'px';
+            label.style.top = (cy - 30) + 'px';
+            label.style.transformOrigin = '0 50%';
+            label.style.transform = 'translateY(-50%) rotate(-90deg)'; // 向上延伸
+        }
+
+        canvas.appendChild(pin);
+        canvas.appendChild(label);
+    }
+</script>
+</body>
+</html>
