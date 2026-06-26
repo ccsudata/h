@@ -30,6 +30,9 @@
 /* Forward declaration for rtModel */
 typedef struct tag_RTM RT_MODEL;
 
+extern uint8_T g_ctrlErrDetail_Left;
+extern uint8_T g_ctrlErrDetail_Right;
+
 /* Block signals and states (auto storage) for system '<S13>/Counter' */
 typedef struct {
   int16_T UnitDelay_DSTATE;            /* '<S18>/UnitDelay' */

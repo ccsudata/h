@@ -4651,6 +4651,9 @@ typedef void * pointer_T;
 # 31 "Inc/BLDC_controller.h"
 typedef struct tag_RTM RT_MODEL;
 
+extern uint8_T g_ctrlErrDetail_Left;
+extern uint8_T g_ctrlErrDetail_Right;
+
 
 typedef struct {
   int16_T UnitDelay_DSTATE;

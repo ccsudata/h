@@ -1,259 +1,559 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<title>GD32E103Rx 完整固件宏定义引脚图</title>
-<style>
-    body {
-        font-family: 'Consolas', 'Segoe UI', Tahoma, monospace;
-        background-color: #1e1e1e;
-        color: #fff;
-        margin: 0;
-        padding: 0;
-        overflow: auto; /* 允许滚动 */
-    }
-    .header {
-        position: fixed;
-        top: 0; left: 0; right: 0;
-        background: rgba(20, 20, 20, 0.9);
-        padding: 20px 40px;
-        z-index: 1000;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .header h1 { margin: 0; font-size: 24px; color: #4fc3f7; }
-    .header p { margin: 5px 0 0; color: #aaa; font-size: 14px;}
-    
-    /* 超大画布容器，保证充足的空间 */
-    .canvas-container {
-        position: relative;
-        width: 2400px;
-        height: 2400px;
-        margin: 100px auto; 
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GD32E103Rx 完整固件引脚图 </title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1A1A1A;
+            overflow: hidden;
+            font-family: 'Consolas', 'Segoe UI', Arial, sans-serif;
+        }
 
-    .chip-body {
-        position: absolute;
-        top: 800px; left: 800px; /* 居中 */
-        width: 800px; height: 800px;
-        background: #2a2a2a;
-        border-radius: 16px;
-        box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 20px 50px rgba(0,0,0,0.6);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 50;
-    }
-    .chip-body h2 { margin: 0; font-size: 64px; letter-spacing: 4px; color: #e0e0e0;}
-    .chip-body p { margin: 10px 0 0; color: #888; font-size: 32px; }
-    .dot {
-        position: absolute;
-        top: 40px; left: 40px;
-        width: 40px; height: 40px;
-        background: #111;
-        border-radius: 50%;
-        box-shadow: inset 4px 4px 10px rgba(0,0,0,0.8);
-    }
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #canvas-container:active {
+            cursor: grabbing;
+        }
+        svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .chip-body { fill: #2B2B2B; stroke: #404040; stroke-width: 4; rx: 20; ry: 20; }
+        .chip-title { fill: #4DB8FF; font-size: 110px; font-weight: bold; text-anchor: middle; dominant-baseline: central; letter-spacing: 2px;}
+        
+        /* 基础 SVG 样式 */
+        .pin-line { stroke-width: 6; stroke-linecap: round; transition: all 0.2s; }
+        .leader-line { stroke: #555; stroke-width: 2; stroke-dasharray: 6 4; transition: all 0.2s; }
+        .pin-num { font-size: 22px; font-weight: bold; transition: all 0.2s; }
+        .pin-orig { font-size: 26px; transition: all 0.2s; }
+        
+        .macro-bg { rx: 5; ry: 5; transition: all 0.2s; }
+        .macro-text { fill: #FFFFFF; font-size: 30px; font-weight: bold; font-family: Consolas, 'Courier New', monospace; transition: all 0.2s; }
 
-    .pin {
-        position: absolute;
-        background: #d4af37; /* 金色 */
-        z-index: 10;
-    }
-    .pin-h { width: 40px; height: 16px; }
-    .pin-v { width: 16px; height: 40px; }
+        /* 搜索高亮状态 */
+        .highlight-line { stroke: #ffeb3b !important; stroke-width: 14 !important; }
+        .highlight-text { fill: #ffeb3b !important; font-weight: bold !important; font-size: 28px !important; }
+        .highlight-bg { fill: #ffeb3b !important; }
+        .highlight-macro-text { fill: #000000 !important; }
 
-    .label-container {
-        position: absolute;
-        white-space: nowrap;
-        font-size: 15px;
-        z-index: 100;
-    }
-
-    /* 文字样式 */
-    .pin-num { color: #888; font-weight: bold; margin: 0 4px; font-size: 16px;}
-    .base-name { color: #bbb; margin: 0 8px; }
-    .macro {
-        background-color: rgba(211, 47, 47, 0.15);
-        color: #ff5252;
-        padding: 4px 8px;
-        border: 1px solid rgba(255, 82, 82, 0.4);
-        border-radius: 4px;
-        font-weight: bold;
-        letter-spacing: 0.5px;
-    }
-    .macro-alt {
-        background-color: rgba(76, 175, 80, 0.15);
-        color: #69f0ae;
-        border-color: rgba(105, 240, 174, 0.4);
-    }
-</style>
+        /* 芯片内部控制台样式 */
+        .center-ui {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            cursor: default;
+        }
+        .center-ui input[type="text"] {
+            background: rgba(25, 25, 25, 0.95);
+            color: #fff;
+            border: 3px solid #555;
+            padding: 20px 30px;
+            border-radius: 40px;
+            font-size: 32px;
+            width: 90%;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            text-align: center;
+            font-family: 'Consolas', monospace;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            cursor: text;
+        }
+        .center-ui input[type="text"]:focus {
+            border-color: #4DB8FF;
+            box-shadow: 0 0 25px rgba(77, 184, 255, 0.5);
+        }
+        .center-ui input[type="text"]::placeholder {
+            color: #666;
+        }
+        .slider-container {
+            margin-top: 40px;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            background: rgba(25, 25, 25, 0.95);
+            padding: 15px 40px;
+            border-radius: 30px;
+            border: 2px solid #444;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .slider-container label {
+            color: #ccc;
+            font-size: 28px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 10px;
+            accent-color: #4DB8FF;
+            cursor: pointer !important;
+        }
+        .reset-btn {
+            background: #4DB8FF;
+            color: #000;
+            border: none;
+            padding: 12px 30px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer !important;
+            transition: transform 0.2s, background 0.2s;
+            white-space: nowrap;
+        }
+        .reset-btn:hover {
+            background: #2196F3;
+            transform: scale(1.03);
+        }
+        .reset-btn:active {
+            transform: scale(0.97);
+        }
+    </style>
 </head>
 <body>
 
-    <div class="canvas-container" id="canvas">
-        <div class="chip-body">
-            <div class="dot"></div>
-            <h2>GD32E103Rx</h2>
-            <p>LQFP64</p>
-        </div>
-    </div>
+<div id="canvas-container">
+    <svg id="chip-svg">
+        <g id="transform-group">
+            <rect class="chip-body" x="1000" y="1000" width="2000" height="2000" />
+            
+            <text class="chip-title" x="2000" y="1450">GD32E103Rx</text>
+            
+            <foreignObject x="1100" y="1620" width="1800" height="350">
+                <div xmlns="http://www.w3.org/1999/xhtml" class="center-ui" id="chip-ui">
+                    <input type="text" id="searchInput" placeholder="搜索引脚 (如: PA3, 3, HALL)..." oninput="highlightPins()" autocomplete="off">
+                    <div class="slider-container">
+                        <label id="zoomlabel" for="zoomSlider">缩放级别:</label>
+                        <input type="range" id="zoomSlider" min="0.1" max="1" step="0.001" value="1" oninput="handleSliderZoom(this.value)">
+                        <button onclick="centerAndFit()" class="reset-btn">自适应全屏</button>
+                    </div>
+                </div>
+            </foreignObject>
+
+            <g id="pins-container"></g>
+        </g>
+    </svg>
+</div>
 
 <script>
-    const canvas = document.getElementById('canvas');
+    const pinData = [
+        { num: 1, orig: "VBAT", macro: "" },
+        { num: 2, orig: "PC13-TAMPER-RTC", macro: "BUZZER_V1" },
+        { num: 3, orig: "PC14-OSC32IN", macro: "" },
+        { num: 4, orig: "PC15-OSC32OUT", macro: "OFF_V1" },
+        { num: 5, orig: "PD0-OSCIN", macro: "" },
+        { num: 6, orig: "PD1-OSCOUT", macro: "" },
+        { num: 7, orig: "NRST", macro: "" },
+        { num: 8, orig: "PC0", macro: "LEFT_DC_CUR" },
+        { num: 9, orig: "PC1", macro: "RIGHT_DC_CUR" },
+        { num: 10, orig: "PC2", macro: "DCLINK_V0" },
+        { num: 11, orig: "PC3", macro: "LEFT_V_CUR" },
+        { num: 12, orig: "VSSA", macro: "" },
+        { num: 13, orig: "VDDA", macro: "" },
+        { num: 14, orig: "PA0-WKUP", macro: "LEFT_U_CUR" },
+        { num: 15, orig: "PA1", macro: "DCLINK_V1/BTN_V0" },
+        { num: 16, orig: "PA2", macro: "PWM_L1/BTN1_L" },
+        { num: 17, orig: "PA3", macro: "PPM_L/PWM_L2/BTN2_L" },
+        { num: 18, orig: "VSS_4", macro: "" },
+        { num: 19, orig: "VDD_4", macro: "" },
+        { num: 20, macro: "BUZZER_V0", orig: "PA4" },
+        { num: 21, orig: "PA5", macro: "OFF_V0" },
+        { num: 22, orig: "PA6", macro: "" },
+        { num: 23, orig: "PA7", macro: "LEFT_TIM_UL" },
+        { num: 24, orig: "PC4", macro: "RIGHT_U_CUR" },
+        { num: 25, orig: "PC5", macro: "RIGHT_V_CUR" },
+        { num: 26, orig: "PB0", macro: "LEFT_TIM_VL" },
+        { num: 27, orig: "PB1", macro: "LEFT_TIM_WL" },
+        { num: 28, orig: "PB2", macro: "LED" },
+        { num: 29, orig: "PB10", macro: "PWM_R1/BTN1_R" },
+        { num: 30, orig: "PB11", macro: "PPM_R/PWM_R2/BTN2_R" },
+        { num: 31, orig: "VSS_1", macro: "" },
+        { num: 32, orig: "VDD_1", macro: "" },
+        { num: 33, orig: "PB12", macro: "" },
+        { num: 34, orig: "PB13", macro: "RIGHT_TIM_UL" },
+        { num: 35, orig: "PB14", macro: "RIGHT_TIM_VL" },
+        { num: 36, orig: "PB15", macro: "RIGHT_TIM_WL" },
+        { num: 37, orig: "PC6", macro: "LEFT_TIM_UH" },
+        { num: 38, orig: "PC7", macro: "LEFT_TIM_VH" },
+        { num: 39, orig: "PC8", macro: "LEFT_TIM_WH" },
+        { num: 40, orig: "PC9", macro: "" },
+        { num: 41, orig: "PA8", macro: "RIGHT_TIM_UH" },
+        { num: 42, orig: "PA9", macro: "RIGHT_TIM_VH" },
+        { num: 43, orig: "PA10", macro: "RIGHT_TIM_WH" },
+        { num: 44, orig: "PA11", macro: "CHARGER_V1" },
+        { num: 45, orig: "PA12", macro: "CHARGER_V0" },
+        { num: 46, orig: "PA13", macro: "" },
+        { num: 47, orig: "VSS_2", macro: "" },
+        { num: 48, orig: "VDD_2", macro: "" },
+        { num: 49, orig: "PA14", macro: "" },
+        { num: 50, orig: "PA15", macro: "" },
+        { num: 51, orig: "PC10", macro: "RIGHT_HALL_U" },
+        { num: 52, orig: "PC11", macro: "RIGHT_HALL_V" },
+        { num: 53, orig: "PC12", macro: "RIGHT_HALL_W" },
+        { num: 54, orig: "PD2", macro: "" },
+        { num: 55, orig: "PB3", macro: "" },
+        { num: 56, orig: "PB4", macro: "" },
+        { num: 57, orig: "PB5", macro: "LEFT_HALL_U" },
+        { num: 58, orig: "PB6", macro: "LEFT_HALL_V" },
+        { num: 59, orig: "PB7", macro: "LEFT_HALL_W" },
+        { num: 60, orig: "BOOT0", macro: "" },
+        { num: 61, orig: "PB8", macro: "" },
+        { num: 62, orig: "PB9", macro: "BUTTON_V1" },
+        { num: 63, orig: "VSS_3", macro: "" },
+        { num: 64, orig: "VDD_3", macro: "" }
+    ];
+
+    const svgNS = "http://www.w3.org/2000/svg";
+    const container = document.getElementById('pins-container');
+
+    // ===================================================
+    // 间距核心参数：大幅压缩间距，提升整体信息密度
+    // ===================================================
+    const pinSpacingFactor = 0.5; 
+    const ORIGINAL_CHIP_SIZE = 2000;
+    const CENTER_X = 2000;
+    const CENTER_Y = 2000;
+
+    let chipSize = ORIGINAL_CHIP_SIZE * pinSpacingFactor;
+    let chipX = CENTER_X - chipSize / 2;
+    let chipY = CENTER_Y - chipSize / 2;
+
+    const pinLength = 48; // 大幅缩短引脚外伸长度，使文字紧贴
+    const pinsPerSide = 16;
     
-    // 从 C 文件中提取的所有定义
-    const pinData = {
-        1: { base: "VBAT", macros: [] },
-        2: { base: "PC13-TAMPER-RTC", macros: ["BUZZER_V1"] },
-        3: { base: "PC14-OSC32IN", macros: [] },
-        4: { base: "PC15-OSC32OUT", macros: ["OFF_V1"] },
-        5: { base: "PD0-OSCIN", macros: [] },
-        6: { base: "PD1-OSCOUT", macros: [] },
-        7: { base: "NRST", macros: [] },
-        8: { base: "PC0", macros: ["LEFT_DC_CUR"] },
-        9: { base: "PC1", macros: ["RIGHT_DC_CUR"] },
-        10: { base: "PC2", macros: ["DCLINK_V0"] },
-        11: { base: "PC3", macros: ["LEFT_V_CUR"] },
-        12: { base: "VSSA", macros: [] },
-        13: { base: "VDDA", macros: [] },
-        14: { base: "PA0-WKUP", macros: ["LEFT_U_CUR"] },
-        15: { base: "PA1", macros: ["DCLINK_V1", "BUTTON_V0"] },
-        16: { base: "PA2", macros: ["PWM_L_CH1 / BTN1_L"] },
-        17: { base: "PA3", macros: ["PPM_L", "PWM_L_CH2 / BTN2_L"] },
-        18: { base: "VSS_4", macros: [] },
-        19: { base: "VDD_4", macros: [] },
-        20: { base: "PA4", macros: ["BUZZER_V0"] },
-        21: { base: "PA5", macros: ["OFF_V0"] },
-        22: { base: "PA6", macros: [] },
-        23: { base: "PA7", macros: ["LEFT_TIM_UL"] },
-        24: { base: "PC4", macros: ["RIGHT_U_CUR"] },
-        25: { base: "PC5", macros: ["RIGHT_V_CUR"] },
-        26: { base: "PB0", macros: ["LEFT_TIM_VL"] },
-        27: { base: "PB1", macros: ["LEFT_TIM_WL"] },
-        28: { base: "PB2", macros: ["LED"] },
-        29: { base: "PB10", macros: ["PWM_R_CH1 / BTN1_R"] },
-        30: { base: "PB11", macros: ["PPM_R", "PWM_R_CH2 / BTN2_R"] },
-        31: { base: "VSS_1", macros: [] },
-        32: { base: "VDD_1", macros: [] },
-        33: { base: "PB12", macros: [] },
-        34: { base: "PB13", macros: ["RIGHT_TIM_UL"] },
-        35: { base: "PB14", macros: ["RIGHT_TIM_VL"] },
-        36: { base: "PB15", macros: ["RIGHT_TIM_WL"] },
-        37: { base: "PC6", macros: ["LEFT_TIM_UH"] },
-        38: { base: "PC7", macros: ["LEFT_TIM_VH"] },
-        39: { base: "PC8", macros: ["LEFT_TIM_WH"] },
-        40: { base: "PC9", macros: [] },
-        41: { base: "PA8", macros: ["RIGHT_TIM_UH"] },
-        42: { base: "PA9", macros: ["RIGHT_TIM_VH"] },
-        43: { base: "PA10", macros: ["RIGHT_TIM_WH"] },
-        44: { base: "PA11", macros: ["CHARGER_V1"] },
-        45: { base: "PA12", macros: ["CHARGER_V0"] },
-        46: { base: "PA13", macros: [] },
-        47: { base: "VSS_2", macros: [] },
-        48: { base: "VDD_2", macros: [] },
-        49: { base: "PA14", macros: [] },
-        50: { base: "PA15", macros: [] },
-        51: { base: "PC10", macros: ["RIGHT_HALL_U"] },
-        52: { base: "PC11", macros: ["RIGHT_HALL_V"] },
-        53: { base: "PC12", macros: ["RIGHT_HALL_W"] },
-        54: { base: "PD2", macros: [] },
-        55: { base: "PB3", macros: [] },
-        56: { base: "PB4", macros: [] },
-        57: { base: "PB5", macros: ["LEFT_HALL_U"] },
-        58: { base: "PB6", macros: ["LEFT_HALL_V"] },
-        59: { base: "PB7", macros: ["LEFT_HALL_W"] },
-        60: { base: "BOOT0", macros: [] },
-        61: { base: "PB8", macros: [] },
-        62: { base: "PB9", macros: ["BUTTON_V1"] },
-        63: { base: "VSS_3", macros: [] },
-        64: { base: "VDD_3", macros: [] }
-    };
+    const pinSpanRatio = 0.90;
+    const pinSpan = chipSize * pinSpanRatio;
+    const pinStartOffset = (chipSize - pinSpan) / 2;
+    const pinStep = pinSpan / (pinsPerSide - 1);
 
-    const chipSize = 800; // 芯片大小
-    const offset = 800;   // 芯片左上角在画布中的位置
-    const spacing = chipSize / 17; // 16个引脚，均分为17份
+    // 配色板
+    const pinColors = [
+        { text: '#FF6B6B', bg: '#C92A2A' },
+        { text: '#4DABF7', bg: '#1A72E8' },
+        { text: '#FFA94D', bg: '#E67E22' },
+        { text: '#69DB7C', bg: '#2B8A3E' },
+        { text: '#E599F7', bg: '#862E9C' },
+        { text: '#66D9E8', bg: '#0C8599' }
+    ];
 
-    for (let i = 1; i <= 64; i++) {
-        const data = pinData[i];
-        let cx = 0, cy = 0; // 引脚在画布中的中心坐标
-        let isLeft = false;
+    function createMacroLabel(x, y, textStr, anchor, baseline, pinNum, themeColor) {
+        if (!textStr) return null;
+        
+        const g = document.createElementNS(svgNS, "g");
+        const charWidth = 16.5; 
+        const textWidth = textStr.length * charWidth + 16; 
+        const textHeight = 38; 
+        
+        let rectX = x;
+        let rectY = baseline === 'central' ? y - textHeight/2 : 
+                    baseline === 'bottom' ? y - textHeight : y;
 
-        const pin = document.createElement('div');
-        const label = document.createElement('div');
-        label.className = 'label-container';
+        if (anchor === 'end') rectX = x - textWidth;
+        if (anchor === 'middle') rectX = x - textWidth/2;
 
-        // 生成带格式的 HTML (左侧反转顺序以保持数字贴近芯片)
-        if (i >= 1 && i <= 16) isLeft = true;
-        if (i >= 49 && i <= 64) isLeft = true; // 顶部由于旋转，反转DOM也能让数字靠着芯片
+        const rect = document.createElementNS(svgNS, "rect");
+        rect.setAttribute("x", rectX);
+        rect.setAttribute("y", rectY);
+        rect.setAttribute("width", textWidth);
+        rect.setAttribute("height", textHeight);
+        rect.setAttribute("fill", themeColor.bg);
+        rect.setAttribute("class", "macro-bg");
+        rect.setAttribute("id", `macro-bg-${pinNum}`);
+        g.appendChild(rect);
 
-        let labelHTML = `<div style="display:flex; align-items:center; ${isLeft ? 'flex-direction:row-reverse;' : ''}">`;
-        labelHTML += `<span class="pin-num">${i}</span>`;
-        labelHTML += `<span class="base-name">${data.base}</span>`;
-        data.macros.forEach((m, idx) => {
-            const mClass = idx % 2 === 0 ? 'macro' : 'macro macro-alt';
-            labelHTML += `<span class="${mClass}" style="${isLeft ? 'margin-right:6px;' : 'margin-left:6px;'}">${m}</span>`;
-        });
-        labelHTML += `</div>`;
-        label.innerHTML = labelHTML;
+        const text = document.createElementNS(svgNS, "text");
+        text.setAttribute("x", anchor === 'start' ? x + 8 : anchor === 'end' ? x - 8 : x);
+        text.setAttribute("y", y);
+        text.setAttribute("text-anchor", anchor);
+        text.setAttribute("dominant-baseline", "central");
+        text.setAttribute("class", "macro-text");
+        text.setAttribute("id", `macro-text-${pinNum}`);
+        text.textContent = textStr;
+        g.appendChild(text);
 
-        if (i >= 1 && i <= 16) { 
-            // 左侧引脚
-            pin.className = 'pin pin-h';
-            cy = offset + i * spacing;
-            cx = offset - 20; 
-            pin.style.top = (cy - 8) + 'px';
-            pin.style.left = (offset - 40) + 'px';
+        return g;
+    }
 
-            label.style.right = (2400 - offset + 50) + 'px';
-            label.style.top = cy + 'px';
-            label.style.transform = 'translateY(-50%)';
+    pinData.forEach((pin, index) => {
+        let side, posIndex;
+        if (index < 16) { side = 'left'; posIndex = index + 1; }
+        else if (index < 32) { side = 'bottom'; posIndex = index - 15; }
+        else if (index < 48) { side = 'right'; posIndex = 48 - index; }
+        else { side = 'top'; posIndex = 64 - index; }
 
-        } else if (i >= 17 && i <= 32) { 
-            // 底部引脚
-            pin.className = 'pin pin-v';
-            cx = offset + (i - 16) * spacing;
-            cy = offset + chipSize + 20;
-            pin.style.left = (cx - 8) + 'px';
-            pin.style.top = (offset + chipSize) + 'px';
+        let x1, y1, x2, y2;
+        let innerX, innerY, innerAnchor, innerBaseline;
+        let outerX, outerY, outerAnchor, outerBaseline;
+        let pinNumX, pinNumY;
+        
+        // 升级为 4 级交错机制，彻底解决水平相邻宏文本的重叠问题
+        const level = index % 4; 
+        const staggerOffset = level * 48; // 紧凑型行高布局
+        
+        const currentTheme = pinColors[index % pinColors.length];
+        const offsetFromStart = pinStartOffset + (posIndex - 1) * pinStep;
 
-            label.style.left = cx + 'px';
-            label.style.top = (cy + 30) + 'px';
-            label.style.transformOrigin = '0 50%';
-            label.style.transform = 'translateY(-50%) rotate(90deg)'; // 向下延伸
+        if (side === 'left') {
+            y1 = y2 = chipY + offsetFromStart;
+            x1 = chipX - pinLength; x2 = chipX;
+            innerX = x2 + 12; innerY = y1;
+            innerAnchor = "start"; innerBaseline = "central";
+            pinNumX = x1 +22; pinNumY = y1 - 6;
+            outerX = x1 - 18; outerY = y1;
+            outerAnchor = "end"; outerBaseline = "central";
+        } 
+        else if (side === 'right') {
+            y1 = y2 = chipY + offsetFromStart;
+            x1 = chipX + chipSize; x2 = chipX + chipSize + pinLength;
+            innerX = x1 - 12; innerY = y1;
+            innerAnchor = "end"; innerBaseline = "central";
+            pinNumX = x2 -33; pinNumY = y1 - 6;
+            outerX = x2 + 18; outerY = y1;
+            outerAnchor = "start"; outerBaseline = "central";
+        }
+        else if (side === 'top') {
+            x1 = x2 = chipX + offsetFromStart;
+            y1 = chipY - pinLength; y2 = chipY;
+            innerX = x1; innerY = y2 + 25;
+            innerAnchor = "middle"; innerBaseline = "central";
+            pinNumX = x1 + 12; pinNumY = y1+44 ;
+            outerX = x1; outerY = y1 - 24 - staggerOffset;
+            outerAnchor = "middle"; outerBaseline = "central";
+            
+            // 仅在有层级错位时绘制极短引线
+            if (pin.macro && level > 0) {
+                const leader = document.createElementNS(svgNS, "line");
+                leader.setAttribute("x1", x1); leader.setAttribute("y1", y1 - 5);
+                leader.setAttribute("x2", x1); leader.setAttribute("y2", outerY + 19);
+                leader.setAttribute("class", "leader-line");
+                leader.setAttribute("id", `leader-line-${pin.num}`);
+                container.appendChild(leader);
+            }
+        }
+        else if (side === 'bottom') {
+            x1 = x2 = chipX + offsetFromStart;
+            y1 = chipY + chipSize; y2 = chipY + chipSize + pinLength;
+            innerX = x1; innerY = y1 - 25;
+            innerAnchor = "middle"; innerBaseline = "central";
+            pinNumX = x1 + 12; pinNumY = y2 -33;
+            outerX = x1; outerY = y2 + 24 + staggerOffset;
+            outerAnchor = "middle"; outerBaseline = "central";
 
-        } else if (i >= 33 && i <= 48) { 
-            // 右侧引脚
-            pin.className = 'pin pin-h';
-            cy = offset + (49 - i) * spacing;
-            cx = offset + chipSize + 20;
-            pin.style.top = (cy - 8) + 'px';
-            pin.style.left = (offset + chipSize) + 'px';
-
-            label.style.left = (cx + 30) + 'px';
-            label.style.top = cy + 'px';
-            label.style.transform = 'translateY(-50%)';
-
-        } else if (i >= 49 && i <= 64) { 
-            // 顶部引脚
-            pin.className = 'pin pin-v';
-            cx = offset + (65 - i) * spacing;
-            cy = offset - 20;
-            pin.style.left = (cx - 8) + 'px';
-            pin.style.top = (offset - 40) + 'px';
-
-            label.style.left = cx + 'px';
-            label.style.top = (cy - 30) + 'px';
-            label.style.transformOrigin = '0 50%';
-            label.style.transform = 'translateY(-50%) rotate(-90deg)'; // 向上延伸
+            if (pin.macro && level > 0) {
+                const leader = document.createElementNS(svgNS, "line");
+                leader.setAttribute("x1", x1); leader.setAttribute("y1", y2 + 5);
+                leader.setAttribute("x2", x1); leader.setAttribute("y2", outerY - 19);
+                leader.setAttribute("class", "leader-line");
+                leader.setAttribute("id", `leader-line-${pin.num}`);
+                container.appendChild(leader);
+            }
         }
 
-        canvas.appendChild(pin);
-        canvas.appendChild(label);
+        // 创建引脚物理线
+        const pinLine = document.createElementNS(svgNS, "line");
+        pinLine.setAttribute("x1", x1); pinLine.setAttribute("y1", y1);
+        pinLine.setAttribute("x2", x2); pinLine.setAttribute("y2", y2);
+        pinLine.setAttribute("class", "pin-line");
+        pinLine.setAttribute("stroke", currentTheme.text);
+        pinLine.setAttribute("id", `pin-line-${pin.num}`);
+        container.appendChild(pinLine);
+
+        // 创建原始功能文字
+        const txtOrig = document.createElementNS(svgNS, "text");
+        txtOrig.setAttribute("x", innerX); txtOrig.setAttribute("y", innerY);
+        txtOrig.setAttribute("text-anchor", innerAnchor);
+        txtOrig.setAttribute("dominant-baseline", innerBaseline);
+        txtOrig.setAttribute("class", "pin-orig");
+        txtOrig.setAttribute("fill", currentTheme.text);
+        txtOrig.setAttribute("id", `pin-orig-${pin.num}`);
+        txtOrig.textContent = pin.orig;
+        container.appendChild(txtOrig);
+
+        // 创建引脚编号
+        const txtNum = document.createElementNS(svgNS, "text");
+        txtNum.setAttribute("x", pinNumX); txtNum.setAttribute("y", pinNumY);
+        txtNum.setAttribute("class", "pin-num");
+        txtNum.setAttribute("fill", currentTheme.text);
+        txtNum.setAttribute("id", `pin-num-${pin.num}`);
+        txtNum.textContent = pin.num;
+        container.appendChild(txtNum);
+
+        // 挂载宏标签
+        if (pin.macro) {
+            const macroGroup = createMacroLabel(outerX, outerY, pin.macro, outerAnchor, outerBaseline, pin.num, currentTheme);
+            container.appendChild(macroGroup);
+        }
+    });
+
+    // 同步调整芯片本体、标题和内部控制台
+    const chipBody = document.querySelector('.chip-body');
+    if (chipBody) {
+        chipBody.setAttribute('x', chipX);
+        chipBody.setAttribute('y', chipY);
+        chipBody.setAttribute('width', chipSize);
+        chipBody.setAttribute('height', chipSize);
     }
+
+    const chipTitle = document.querySelector('.chip-title');
+    if (chipTitle) {
+        const titleY = chipY + chipSize * 0.225;
+        chipTitle.setAttribute('y', titleY);
+    }
+
+    const foreignObj = document.querySelector('foreignObject');
+    if (foreignObj) {
+        const relX = 100;
+        const relY = 620;
+        const relW = 1800;
+        const relH = 350;
+        const scale = chipSize / 2000;
+        foreignObj.setAttribute('x', chipX + relX * scale);
+        foreignObj.setAttribute('y', chipY + relY * scale);
+        foreignObj.setAttribute('width', relW * scale);
+        foreignObj.setAttribute('height', relH * scale);
+    }
+
+    // 交互核心控制逻辑
+    function highlightPins() {
+        const val = document.getElementById('searchInput').value.toUpperCase();
+        
+        pinData.forEach(pin => {
+            const num = pin.num;
+            const orig = pin.orig.toUpperCase();
+            const macro = pin.macro ? pin.macro.toUpperCase() : "";
+            
+            const isMatch = val && (num.toString() === val || orig.includes(val) || macro.includes(val));
+
+            const pinLine = document.getElementById(`pin-line-${num}`);
+            const pinOrig = document.getElementById(`pin-orig-${num}`);
+            const pinNum = document.getElementById(`pin-num-${num}`);
+            const macroBg = document.getElementById(`macro-bg-${num}`);
+            const macroText = document.getElementById(`macro-text-${num}`);
+            const leaderLine = document.getElementById(`leader-line-${num}`);
+
+            if (isMatch) {
+                pinLine.classList.add('highlight-line');
+                pinOrig.classList.add('highlight-text');
+                pinNum.classList.add('highlight-text');
+                if (macroBg) macroBg.classList.add('highlight-bg');
+                if (macroText) macroText.classList.add('highlight-macro-text');
+                if (leaderLine) leaderLine.classList.add('highlight-line');
+            } else {
+                pinLine.classList.remove('highlight-line');
+                pinOrig.classList.remove('highlight-text');
+                pinNum.classList.remove('highlight-text');
+                if (macroBg) macroBg.classList.remove('highlight-bg');
+                if (macroText) macroText.classList.remove('highlight-macro-text');
+                if (leaderLine) leaderLine.classList.remove('highlight-line');
+            }
+        });
+    }
+
+    const svgEle = document.getElementById('chip-svg');
+    const transformGroup = document.getElementById('transform-group');
+    const zoomSlider = document.getElementById('zoomSlider');
+    let isPanning = false;
+    let startPoint = { x: 0, y: 0 };
+    let currentPan = { x: 0, y: 0 };
+    let currentScale = 1;
+
+    function updateTransform() {
+        transformGroup.setAttribute('transform', `translate(${currentPan.x}, ${currentPan.y}) scale(${currentScale})`);
+        if(zoomSlider) {
+            zoomSlider.value = Math.min(1, Math.max(0.1, currentScale));
+            document.getElementById('zoomlabel').textContent = `缩放级别: ${Number(zoomSlider.value).toFixed(3)}`;
+        }
+    }
+
+    function handleSliderZoom(val) {
+        const newScale = parseFloat(val);
+        const rect = svgEle.getBoundingClientRect();
+        const mouseX = rect.width / 2;
+        const mouseY = rect.height / 2;
+        
+        currentPan.x = mouseX - (mouseX - currentPan.x) * (newScale / currentScale);
+        currentPan.y = mouseY - (mouseY - currentPan.y) * (newScale / currentScale);
+        currentScale = newScale;
+        updateTransform();
+    }
+
+    function centerAndFit() {
+        transformGroup.setAttribute('transform', '');
+        const bbox = transformGroup.getBBox();
+        const rect = svgEle.getBoundingClientRect();
+        
+        const padding = 15;
+        const targetWidth = rect.width - padding * 2;
+        const targetHeight = rect.height ;//- padding * 2*0
+        
+        const scaleX = targetWidth / bbox.width;
+        const scaleY = targetHeight / bbox.height;
+        currentScale = Math.min(scaleX, scaleY);
+        
+        const bboxCenterX = bbox.x + bbox.width / 2;
+        const bboxCenterY = bbox.y + bbox.height / 2;
+        
+        currentPan.x = (rect.width / 2) - (bboxCenterX * currentScale);
+        currentPan.y = (rect.height / 2) - (bboxCenterY * currentScale);
+        
+        updateTransform();
+    }
+
+    window.onload = () => { setTimeout(centerAndFit, 10); };
+    window.addEventListener('resize', centerAndFit);
+
+    const chipUi = document.getElementById('chip-ui');
+    ['mousedown', 'touchstart', 'wheel', 'dblclick'].forEach(evt => {
+        chipUi.addEventListener(evt, e => e.stopPropagation());
+    });
+
+    svgEle.addEventListener('mousedown', (e) => {
+        isPanning = true;
+        startPoint = { x: e.clientX - currentPan.x, y: e.clientY - currentPan.y };
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        currentPan.x = e.clientX - startPoint.x;
+        currentPan.y = e.clientY - startPoint.y;
+        updateTransform();
+    });
+    window.addEventListener('mouseup', () => isPanning = false);
+    window.addEventListener('mouseleave', () => isPanning = false);
+
+    svgEle.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomSensitivity = 0.0015;
+        const delta = e.deltaY * -zoomSensitivity;
+        let newScale = Math.max(0.05, Math.min(3, currentScale + delta));
+        
+        const rect = svgEle.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        currentPan.x = mouseX - (mouseX - currentPan.x) * (newScale / currentScale);
+        currentPan.y = mouseY - (mouseY - currentPan.y) * (newScale / currentScale);
+        currentScale = newScale;
+        
+        updateTransform();
+    }, { passive: false });
 </script>
 </body>
 </html>

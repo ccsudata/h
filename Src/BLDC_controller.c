@@ -19,6 +19,9 @@
 
 #include "BLDC_controller.h"
 
+uint8_T g_ctrlErrDetail_Left = 0U;
+uint8_T g_ctrlErrDetail_Right = 0U;
+
 /* Named constants for Chart: '<S5>/F03_02_Control_Mode_Manager' */
 #define IN_ACTIVE                      ((uint8_T)1U)
 #define IN_NO_ACTIVE_CHILD             ((uint8_T)0U)
@@ -1725,10 +1728,16 @@ void BLDC_controller_step(RT_MODEL *const rtM)
                       rtP->t_errDequal, &rtDW->Merge_p, &rtDW->Debounce_Filter_k);
 
       /* End of Outputs for SubSystem: '<S20>/Debounce_Filter' */
-    extern P rtP_Right;
-      if (rtP == &rtP_Right){//qgb
-    //if (rtP != &rtP_Left) {
-          rtDW->Merge_p = false;  // 强行把右轮的霍尔错误信号抹除掉
+    extern P rtP_Right;//qgb
+      {
+        uint8_T ctrlErrCode = (uint8_T)rtb_a_elecAngle_XA_g;
+        if (rtP == &rtP_Right) {
+          g_ctrlErrDetail_Right = ctrlErrCode;  // 记录右轮控制器错误码，再抑制右轮输出
+          rtDW->Merge_p = false;               // 强行把右轮的错误信号抹除掉
+        } else {
+          g_ctrlErrDetail_Left = ctrlErrCode;   // 记录左轮控制器错误码
+          rtDW->Merge_p = false;
+        }
       }
       // ===================================================
 

@@ -565,15 +565,21 @@ if (now - lastSendTick >= 1000U) {
             snprintf(rx_hex_str, sizeof(rx_hex_str), "");
         }
 
-        // 4. 【关键核心】将原本错误的 %s 全部修正为 %d
-        // 提示：如果你的固件修改过、某些物理量是浮点数，请将 %d 改为 %.2f
+        char err_detail[24] = {0};
+        if (g_ctrlErrDetail_Left != 0U || g_ctrlErrDetail_Right != 0U) {
+            snprintf(err_detail, sizeof(err_detail), " errL:%02X errR:%02X",
+                     (unsigned int)g_ctrlErrDetail_Left,
+                     (unsigned int)g_ctrlErrDetail_Right);
+        }
+
         int written = snprintf(buf, sizeof(buf), 
-                               "%lums L:%d R:%d V:%d T:%d [%s]\r\n", 
+                               "%lums L:%d R:%d V:%d T:%d%s [%s]\r\n", 
                                (unsigned long)now,
                                (int)Feedback.speedL_meas, 
                                (int)Feedback.speedR_meas, 
                                (int)Feedback.batVoltage, 
-                               (int)Feedback.boardTemp, 
+                               (int)Feedback.boardTemp,
+                               err_detail,
                                rx_hex_str);
 
         // 5. 安全触发 DMA 发送
