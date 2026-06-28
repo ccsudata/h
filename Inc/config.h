@@ -137,5 +137,6 @@
 #define RATE                    DEFAULT_RATE
 #define FILTER                  DEFAULT_FILTER
 #define INPUTS_NR               2
+#define REVERSE_SPEED_LIMIT     250
 
 #endif

@@ -174,6 +174,7 @@ static uint32_t Sideboard_R_len = sizeof(Sideboard_R);
 static SerialCommand commandL;
 static SerialCommand commandL_raw;
 static uint32_t commandL_len = sizeof(commandL);
+static uint8_t serialCmdActive_L = 0;
   #ifdef CONTROL_IBUS
   static uint16_t ibusL_captured_value[IBUS_NUM_CHANNELS];
   #endif
@@ -183,6 +184,7 @@ static uint32_t commandL_len = sizeof(commandL);
 static SerialCommand commandR;
 static SerialCommand commandR_raw;
 static uint32_t commandR_len = sizeof(commandR);
+static uint8_t serialCmdActive_R = 0;
   #ifdef CONTROL_IBUS
   static uint16_t ibusR_captured_value[IBUS_NUM_CHANNELS];
   #endif
@@ -963,6 +965,7 @@ void handleTimeout(void) {
       if (timeoutCntSerial_L++ >= SERIAL_TIMEOUT) {     // Timeout qualification
         timeoutFlgSerial_L = 1;                         // Timeout detected
         timeoutCntSerial_L = SERIAL_TIMEOUT;            // Limit timout counter value
+        serialCmdActive_L = 0;                          // No valid serial control while timed out
         #if defined(DUAL_INPUTS) && ((defined(CONTROL_SERIAL_USART2) && CONTROL_SERIAL_USART2 == 1) || (defined(SIDEBOARD_SERIAL_USART2) && SIDEBOARD_SERIAL_USART2 == 1))
           inIdx = 0;                                    // Switch to Primary input in case of Timeout on Auxiliary input
         #endif
@@ -974,7 +977,7 @@ void handleTimeout(void) {
             inIdx = !SIDEBOARD_SERIAL_USART2;
           }
         #elif defined(DUAL_INPUTS) && (defined(CONTROL_SERIAL_USART2) && CONTROL_SERIAL_USART2 == 1)
-          inIdx = 1;                                    // Switch to Auxiliary input in case of NO Timeout on Auxiliary input
+          inIdx = serialCmdActive_L ? 1 : 0;            // Only use serial input when it carries non-zero control data
         #endif
       }
       #if (defined(CONTROL_SERIAL_USART2) && CONTROL_SERIAL_USART2 == 0) || (defined(SIDEBOARD_SERIAL_USART2) && SIDEBOARD_SERIAL_USART2 == 0 && !defined(VARIANT_HOVERBOARD))
@@ -986,6 +989,7 @@ void handleTimeout(void) {
       if (timeoutCntSerial_R++ >= SERIAL_TIMEOUT) {     // Timeout qualification
         timeoutFlgSerial_R = 1;                         // Timeout detected
         timeoutCntSerial_R = SERIAL_TIMEOUT;            // Limit timout counter value
+        serialCmdActive_R = 0;                          // No valid serial control while timed out
         #if defined(DUAL_INPUTS) && ((defined(CONTROL_SERIAL_USART3) && CONTROL_SERIAL_USART3 == 1) || (defined(SIDEBOARD_SERIAL_USART3) && SIDEBOARD_SERIAL_USART3 == 1))
           inIdx = 0;                                    // Switch to Primary input in case of Timeout on Auxiliary input
         #endif
@@ -997,7 +1001,7 @@ void handleTimeout(void) {
             inIdx = !SIDEBOARD_SERIAL_USART3;
           }
         #elif defined(DUAL_INPUTS) && (defined(CONTROL_SERIAL_USART3) && CONTROL_SERIAL_USART3 == 1)
-          inIdx = 1;                                    // Switch to Auxiliary input in case of NO Timeout on Auxiliary input
+          inIdx = serialCmdActive_R ? 1 : 0;            // Only use serial input when it carries non-zero control data
         #endif
       }
       #if (defined(CONTROL_SERIAL_USART3) && CONTROL_SERIAL_USART3 == 0) || (defined(SIDEBOARD_SERIAL_USART3) && SIDEBOARD_SERIAL_USART3 == 0 && !defined(VARIANT_HOVERBOARD))
@@ -1325,16 +1329,40 @@ void usart_process_command(SerialCommand *command_in, SerialCommand *command_out
   if (command_in->start == SERIAL_START_FRAME) {
     checksum = (uint16_t)(command_in->start ^ command_in->steer ^ command_in->speed);
     if (command_in->checksum == checksum) {
-      *command_out = *command_in;
-      if (usart_idx == 2) {             // Sideboard USART2
+      if (abs(command_in->steer) > 0 || abs(command_in->speed) > 0) {
+        *command_out = *command_in;
+        if (usart_idx == 2) {             // Sideboard USART2
+          #ifdef CONTROL_SERIAL_USART2
+          timeoutFlgSerial_L = 0;         // Clear timeout flag
+          timeoutCntSerial_L = 0;         // Reset timeout counter
+          serialCmdActive_L = 1;          // Mark that serial control carries real command data
+          #endif
+        } else if (usart_idx == 3) {      // Sideboard USART3
+          #ifdef CONTROL_SERIAL_USART3
+          timeoutFlgSerial_R = 0;         // Clear timeout flag
+          timeoutCntSerial_R = 0;         // Reset timeout counter
+          serialCmdActive_R = 1;          // Mark that serial control carries real command data
+          #endif
+        }
+      } else {
+        if (usart_idx == 2) {
+          #ifdef CONTROL_SERIAL_USART2
+          serialCmdActive_L = 0;
+          #endif
+        } else if (usart_idx == 3) {
+          #ifdef CONTROL_SERIAL_USART3
+          serialCmdActive_R = 0;
+          #endif
+        }
+      }
+    } else {
+      if (usart_idx == 2) {
         #ifdef CONTROL_SERIAL_USART2
-        timeoutFlgSerial_L = 0;         // Clear timeout flag
-        timeoutCntSerial_L = 0;         // Reset timeout counter
+        serialCmdActive_L = 0;
         #endif
-      } else if (usart_idx == 3) {      // Sideboard USART3
+      } else if (usart_idx == 3) {
         #ifdef CONTROL_SERIAL_USART3
-        timeoutFlgSerial_R = 0;         // Clear timeout flag
-        timeoutCntSerial_R = 0;         // Reset timeout counter
+        serialCmdActive_R = 0;
         #endif
       }
     }

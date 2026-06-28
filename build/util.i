@@ -5097,13 +5097,14 @@ static uint32_t rx_buffer_R_latest_len = 0;
 
 static uint16_t timeoutCntSerial_R = 210;
 static uint8_t timeoutFlgSerial_R = 0;
-# 183 "Src/util.c"
+# 184 "Src/util.c"
 static SerialCommand commandR;
 static SerialCommand commandR_raw;
 static uint32_t commandR_len = sizeof(commandR);
-# 197 "Src/util.c"
+static uint8_t serialCmdActive_R = 0;
+# 199 "Src/util.c"
 static uint8_t brakePressed;
-# 234 "Src/util.c"
+# 236 "Src/util.c"
 void BLDC_Init(void) {
 
   rtP_Left.b_angleMeasEna = 0;
@@ -5149,7 +5150,7 @@ void Input_Lim_Init(void) {
 }
 
 void Input_Init(void) {
-# 291 "Src/util.c"
+# 293 "Src/util.c"
     UART3_Init();
 
 
@@ -5209,9 +5210,9 @@ void Input_Init(void) {
       }
     }
     HAL_FLASH_Lock();
-# 401 "Src/util.c"
+# 403 "Src/util.c"
 }
-# 411 "Src/util.c"
+# 413 "Src/util.c"
 void UART_DisableRxErrors(UART_HandleTypeDef *huart)
 {
   ((huart->Instance->CR1) &= ~((0x1U << (8U))));
@@ -5292,7 +5293,7 @@ void calcAvgSpeed(void) {
     }
     speedAvgAbs = abs(speedAvg);
 }
-# 502 "Src/util.c"
+# 504 "Src/util.c"
 void adcCalibLim(void) {
 
   calcAvgSpeed();
@@ -5446,19 +5447,19 @@ void updateCurSpdLim(void) {
     rtP_Left.n_max = rtP_Right.n_max = (int16_t)((1000 * spd_factor) >> 12);
     cur_spd_valid += 2;
   }
-# 663 "Src/util.c"
+# 665 "Src/util.c"
 }
-# 673 "Src/util.c"
+# 675 "Src/util.c"
 void standstillHold(void) {
-# 693 "Src/util.c"
+# 695 "Src/util.c"
 }
-# 703 "Src/util.c"
+# 705 "Src/util.c"
 void electricBrake(uint16_t speedBlend, uint8_t reverseDir) {
-# 730 "Src/util.c"
+# 732 "Src/util.c"
 }
-# 739 "Src/util.c"
+# 741 "Src/util.c"
 void cruiseControl(uint8_t button) {
-# 755 "Src/util.c"
+# 757 "Src/util.c"
 }
 
 
@@ -5504,7 +5505,7 @@ int checkInputType(int16_t min, int16_t mid, int16_t max){
 
   return type;
 }
-# 809 "Src/util.c"
+# 811 "Src/util.c"
 void calcInputCmd(InputStruct *in, int16_t out_min, int16_t out_max) {
   switch (in->typ){
     case 1:
@@ -5539,7 +5540,7 @@ void readInputRaw(void) {
         input2[inIdx].raw = adc_buffer.l_rx2;
 
     }
-# 873 "Src/util.c"
+# 875 "Src/util.c"
     if (inIdx == 1) {
 
 
@@ -5552,7 +5553,7 @@ void readInputRaw(void) {
         input2[inIdx].raw = commandR.speed;
 
     }
-# 940 "Src/util.c"
+# 942 "Src/util.c"
 }
 
 
@@ -5573,10 +5574,11 @@ void handleTimeout(void) {
         }
       }
     }
-# 986 "Src/util.c"
+# 989 "Src/util.c"
       if (timeoutCntSerial_R++ >= 210) {
         timeoutFlgSerial_R = 1;
         timeoutCntSerial_R = 210;
+        serialCmdActive_R = 0;
 
           inIdx = 0;
 
@@ -5588,10 +5590,10 @@ void handleTimeout(void) {
 
 
 
-          inIdx = 1;
+          inIdx = serialCmdActive_R ? 1 : 0;
 
       }
-# 1034 "Src/util.c"
+# 1038 "Src/util.c"
     if (timeoutFlgADC || timeoutFlgSerial || timeoutFlgGen) {
       ctrlModReq = 0;
       input1[inIdx].cmd = 0;
@@ -5634,7 +5636,7 @@ void readCommand(void) {
     else {
       brakePressed = (uint8_t)(input2[inIdx].cmd < -50);
     }
-# 1086 "Src/util.c"
+# 1090 "Src/util.c"
 }
 
 
@@ -5644,7 +5646,7 @@ void readCommand(void) {
 
 void usart2_rx_check(void)
 {
-# 1154 "Src/util.c"
+# 1158 "Src/util.c"
 }
 
 
@@ -5674,7 +5676,7 @@ void usart3_rx_check(void)
     }
     rx_buffer_R_latest_len = len;
   }
-# 1197 "Src/util.c"
+# 1201 "Src/util.c"
   uint8_t *ptr;
   if (pos != old_pos) {
     ptr = (uint8_t *)&commandR_raw;
@@ -5690,7 +5692,7 @@ void usart3_rx_check(void)
       usart_process_command(&commandR_raw, &commandR, 3);
     }
   }
-# 1233 "Src/util.c"
+# 1237 "Src/util.c"
   old_pos = pos;
   if (old_pos == rx_buffer_R_len) {
     old_pos = 0;
@@ -5703,42 +5705,66 @@ const uint8_t *get_usart3_rx_latest(uint32_t *len)
 {
   const uint8_t *result = rx_buffer_R_latest;
   if (len != 
-# 1244 "Src/util.c" 3 4
+# 1248 "Src/util.c" 3 4
             ((void *)0)
-# 1244 "Src/util.c"
+# 1248 "Src/util.c"
                 ) {
     *len = rx_buffer_R_latest_len;
   }
   rx_buffer_R_latest_len = 0;
   return result;
 }
-# 1299 "Src/util.c"
+# 1303 "Src/util.c"
 void usart_process_command(SerialCommand *command_in, SerialCommand *command_out, uint8_t usart_idx)
 {
-# 1324 "Src/util.c"
+# 1328 "Src/util.c"
   uint16_t checksum;
   if (command_in->start == 0xABCD) {
     checksum = (uint16_t)(command_in->start ^ command_in->steer ^ command_in->speed);
     if (command_in->checksum == checksum) {
-      *command_out = *command_in;
-      if (usart_idx == 2) {
+      if (abs(command_in->steer) > 0 || abs(command_in->speed) > 0) {
+        *command_out = *command_in;
+        if (usart_idx == 2) {
 
+
+
+
+
+        } else if (usart_idx == 3) {
+
+          timeoutFlgSerial_R = 0;
+          timeoutCntSerial_R = 0;
+          serialCmdActive_R = 1;
+
+        }
+      } else {
+        if (usart_idx == 2) {
+
+
+
+        } else if (usart_idx == 3) {
+
+          serialCmdActive_R = 0;
+
+        }
+      }
+    } else {
+      if (usart_idx == 2) {
 
 
 
       } else if (usart_idx == 3) {
 
-        timeoutFlgSerial_R = 0;
-        timeoutCntSerial_R = 0;
+        serialCmdActive_R = 0;
 
       }
     }
   }
 
 }
-# 1381 "Src/util.c"
+# 1409 "Src/util.c"
 void sideboardLeds(uint8_t *leds) {
-# 1447 "Src/util.c"
+# 1475 "Src/util.c"
 }
 
 
@@ -5747,11 +5773,11 @@ void sideboardLeds(uint8_t *leds) {
 
 
 void sideboardSensors(uint8_t sensors) {
-# 1547 "Src/util.c"
+# 1575 "Src/util.c"
 }
-# 1557 "Src/util.c"
+# 1585 "Src/util.c"
 void saveConfig() {
-# 1566 "Src/util.c"
+# 1594 "Src/util.c"
     if (inp_cal_valid || cur_spd_valid) {
 
 
@@ -5826,16 +5852,16 @@ void poweroffPressCheck(void) {
       poweroff();
       }
     }
-# 1668 "Src/util.c"
+# 1696 "Src/util.c"
 }
-# 1688 "Src/util.c"
+# 1716 "Src/util.c"
 void filtLowPass32(int32_t u, uint16_t coef, int32_t *y) {
   int64_t tmp;
   tmp = ((int64_t)((u << 4) - (*y >> 12)) * coef) >> 4;
   tmp = (((tmp) > (2147483647LL)) ? (2147483647LL) : (((tmp) < (-2147483648LL)) ? (-2147483648LL) : (tmp)));
   *y = (int32_t)tmp + (*y);
 }
-# 1712 "Src/util.c"
+# 1740 "Src/util.c"
 void rateLimiter16(int16_t u, int16_t rate, int16_t *y) {
   int16_t q0;
   int16_t q1;
@@ -5878,7 +5904,7 @@ void mixerFcn(int16_t rtu_speed, int16_t rtu_steer, int16_t *rty_speedR, int16_t
     *rty_speedL = (int16_t)(tmp >> 4);
     *rty_speedL = (((*rty_speedL) > (INPUT_MAX)) ? (INPUT_MAX) : (((*rty_speedL) < (INPUT_MIN)) ? (INPUT_MIN) : (*rty_speedL)));
 }
-# 1764 "Src/util.c"
+# 1792 "Src/util.c"
 void multipleTapDet(int16_t u, uint32_t timeNow, MultipleTap *x) {
   uint8_t b_timeout;
   uint8_t b_hyst;
