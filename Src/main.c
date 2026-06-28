@@ -274,11 +274,13 @@ int main(void) {
       #endif
 
       #ifdef VARIANT_HOVERCAR
-      if (inIdx == CONTROL_ADC) {                                   // Only use use implementation below if pedals are in use (ADC input)
-        if (speedAvg > 0) {                                         // Make sure the Brake pedal is opposite to the direction of motion AND it goes to 0 as we reach standstill (to avoid Reverse driving by Brake pedal) 
-          input1[inIdx].cmd = (int16_t)((-input1[inIdx].cmd * speedBlend) >> 15);
+      if (inIdx == CONTROL_ADC) {                                   // Keep the brake pedal command directly tied to pedal force so it can generate real opposing torque.
+        if (speedAvg > 0) {
+          input1[inIdx].cmd = (int16_t)(-ABS(input1[inIdx].cmd));
+        } else if (speedAvg < 0) {
+          input1[inIdx].cmd = (int16_t)( ABS(input1[inIdx].cmd));
         } else {
-          input1[inIdx].cmd = (int16_t)(( input1[inIdx].cmd * speedBlend) >> 15);
+          input1[inIdx].cmd = 0;
         }
       }
       #endif
@@ -319,9 +321,14 @@ int main(void) {
         }
         #endif
 
-        if (ABS(input1[inIdx].cmd) > 30) {                           // Brake active: stop smoothly, but keep limited reverse on double tap
+        if (ABS(input1[inIdx].cmd) > 30) {                           // Brake active: generate a real opposing command proportional to pedal force.
+          int16_t brakeMagnitude = (int16_t)CLAMP((ABS(input1[inIdx].cmd) * 1000) / 1000, 0, 1000);
           if (MultipleTapBrake.b_multipleTap && speedAvgAbs < 60) {
-            speed = -(int16_t)CLAMP(ABS(input1[inIdx].cmd), 0, REVERSE_SPEED_LIMIT);
+            speed = -(int16_t)CLAMP(brakeMagnitude, 0, REVERSE_SPEED_LIMIT);
+          } else if (speedAvg > 0) {
+            speed = -brakeMagnitude;
+          } else if (speedAvg < 0) {
+            speed =  brakeMagnitude;
           } else {
             speed = 0;
           }
