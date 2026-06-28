@@ -140,5 +140,9 @@
 #define THROTTLE_RELEASE_RATE   160
 #define INPUTS_NR               2
 #define REVERSE_SPEED_LIMIT     200
+#define BRAKE_MIN_SPEED_RPM     20
+#define BRAKE_SMOOTH_ZONE_RPM   150
+#define BRAKE_RAMP_STEP         40
+#define BRAKE_MAX_LIMIT         1000
 
 #endif

@@ -138,6 +138,7 @@ static int16_t    speed;                // local variable for speed. -1000 to 10
 
 static uint32_t    buzzerTimer_prev = 0;
 static uint32_t    inactivity_timeout_counter;
+static int16_t     filteredBrakeCmd = 0;
 static MultipleTap MultipleTapBrake;    // define multiple tap functionality for the Brake pedal
 
 static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes on startup
@@ -321,8 +322,28 @@ int main(void) {
         }
         #endif
 
-        if (ABS(input1[inIdx].cmd) > 30) {                           // Brake active: generate a real opposing command proportional to pedal force.
-          int16_t brakeMagnitude = (int16_t)CLAMP((ABS(input1[inIdx].cmd) * 1000) / 1000, 0, 1000);
+        if (ABS(input1[inIdx].cmd) > 30) {                           // Smooth brake: ramp the request first, then scale by speed and deadband the zero-speed zone.
+          int16_t brakePedal = ABS(input1[inIdx].cmd);
+          int32_t brakeError = (int32_t)brakePedal - filteredBrakeCmd;
+          if (brakeError > BRAKE_RAMP_STEP) {
+            filteredBrakeCmd += BRAKE_RAMP_STEP;
+          } else if (brakeError < -BRAKE_RAMP_STEP) {
+            filteredBrakeCmd -= BRAKE_RAMP_STEP;
+          } else {
+            filteredBrakeCmd = brakePedal;
+          }
+
+          int32_t speedFactor = 1000;
+          if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
+            speedFactor = 0;
+          } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
+            speedFactor = ((int32_t)speedAvgAbs - BRAKE_MIN_SPEED_RPM) * 1000 /
+                          (BRAKE_SMOOTH_ZONE_RPM - BRAKE_MIN_SPEED_RPM);
+          }
+
+          int16_t brakeMagnitude = (int16_t)((filteredBrakeCmd * speedFactor) / 1000);
+          brakeMagnitude = (int16_t)CLAMP(brakeMagnitude, 0, BRAKE_MAX_LIMIT);
+
           if (MultipleTapBrake.b_multipleTap && speedAvgAbs < 60) {
             speed = -(int16_t)CLAMP(brakeMagnitude, 0, REVERSE_SPEED_LIMIT);
           } else if (speedAvg > 0) {
@@ -333,6 +354,13 @@ int main(void) {
             speed = 0;
           }
         } else {
+          if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
+            filteredBrakeCmd -= BRAKE_RAMP_STEP;
+          } else if (filteredBrakeCmd < -BRAKE_RAMP_STEP) {
+            filteredBrakeCmd += BRAKE_RAMP_STEP;
+          } else {
+            filteredBrakeCmd = 0;
+          }
           speed = steer + speed;                      // Forward driving: in this case steer = Brake, speed = Throttle
         }
         steer = 0;                              // Do not apply steering to avoid side effects if STEER_COEFFICIENT is NOT 0
