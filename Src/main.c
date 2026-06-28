@@ -501,24 +501,23 @@ if (now - lastSendTick >= 1000U) {
     if (huart3.gState == HAL_UART_STATE_READY && huart3.hdmatx->State == HAL_DMA_STATE_READY) {
         
         // 1. 扩容缓冲区，确保容纳转换后的长字符串
-        static char buf[192]; 
-        
+        static char buf[240]; 
+
         // 2. 正确获取串口 3 接收到的原始二进制数据
         uint32_t rx_len = 0;
         const uint8_t *rx_data = get_usart3_rx_latest(&rx_len);
-        
+
         // 3. 将接收到的二进制 hex 数据安全地转化为可见字符 hex 字符串
         char rx_hex_str[32] = {0}; 
         if (rx_data != NULL && rx_len > 0) {
             int p = 0;
-            // 最多打印前 8 个字节，防止数据太长塞满 buf
             #define MAX_RX_BYTES_TO_PRINT 12
             uint32_t max_bytes = (rx_len > MAX_RX_BYTES_TO_PRINT) ? MAX_RX_BYTES_TO_PRINT : rx_len; 
             for (uint32_t i = 0; i < max_bytes; i++) {
                 p += snprintf(rx_hex_str + p, sizeof(rx_hex_str) - p, "%02X ", rx_data[i]);
             }
             if (rx_len > MAX_RX_BYTES_TO_PRINT) {
-                snprintf(rx_hex_str + p - 1, sizeof(rx_hex_str) - p + 1, ".."); // 超过 8 字节加省略号
+                snprintf(rx_hex_str + p - 1, sizeof(rx_hex_str) - p + 1, "..");
             }
         } else {
             snprintf(rx_hex_str, sizeof(rx_hex_str), "");
@@ -531,13 +530,17 @@ if (now - lastSendTick >= 1000U) {
                      (unsigned int)g_ctrlErrDetail_Right);
         }
 
-        int written = snprintf(buf, sizeof(buf), 
-                               "%lums L:%d R:%d TX2:%d RX2:%d V:%d T:%d%s [%s]\r\n", 
+        int written = snprintf(buf, sizeof(buf),
+                               "%lums L:%d R:%d TX2:%d RX2:%d fs:%d st:%d cL:%d cR:%d V:%d T:%d%s [%s]\r\n",
                                (unsigned long)now,
                                (int)Feedback.speedL_meas, 
                                (int)Feedback.speedR_meas, 
                                (int)adc_buffer.l_tx2,
                                (int)adc_buffer.l_rx2,
+                               (int)speed,
+                               (int)steer,
+                               (int)cmdL,
+                               (int)cmdR,
                                (int)Feedback.batVoltage, 
                                (int)Feedback.boardTemp,
                                err_detail,
