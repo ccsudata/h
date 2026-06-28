@@ -1057,6 +1057,12 @@ void handleTimeout(void) {
  * - MIN/MAX limitations and deadband
  */
 void readCommand(void) {
+    #if defined(DUAL_INPUTS) && defined(CONTROL_SERIAL_USART3)
+      if ((inIdx == 1) && !serialCmdActive_R) {
+        inIdx = CONTROL_ADC;
+      }
+    #endif
+
     readInputRaw();
     HAL_Delay(1);
     #if !defined(VARIANT_TRANSPOTTER)
