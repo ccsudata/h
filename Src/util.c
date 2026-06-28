@@ -809,7 +809,12 @@ int checkInputType(int16_t min, int16_t mid, int16_t max){
  * This function realizes dead-band around 0 and scales the input between [out_min, out_max]
  */
 void calcInputCmd(InputStruct *in, int16_t out_min, int16_t out_max) {
-  switch (in->typ){
+  uint8_t input_type = in->typ;
+  if (input_type == 0) {
+    input_type = (in->typDef == 3) ? checkInputType(in->min, in->mid, in->max) : in->typDef;
+  }
+
+  switch (input_type){
     case 1: // Input is a normal pot
       in->cmd = CLAMP(MAP(in->raw, in->min, in->max, 0, out_max), 0, out_max);
       break;
