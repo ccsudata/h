@@ -98,8 +98,8 @@
 
 #define DUAL_INPUTS
 
-#define PRI_INPUT1              2,  1095, 0, 3197, 50 /* PRI_INPUT1 对应油门转把：类型2, 最小1095, 中位0, 最大3197, 死区50 */
-#define PRI_INPUT2              2,  1029, 0, 3125, 50
+#define PRI_INPUT1              2,  700, 1024, 3197, 50 /* PRI_INPUT1 对应油门转把：类型2, 最小700, 中位1024, 最大3197, 死区50 */
+#define PRI_INPUT2              2,  700, 1024, 3125, 50
 #define AUX_INPUT1              2, -1000, 0, 1000, 0
 #define AUX_INPUT2              2, -1000, 0, 1000, 0
 

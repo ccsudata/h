@@ -258,9 +258,14 @@ int main(void) {
       #endif
 
       #ifdef VARIANT_HOVERCAR
-      if (inIdx == CONTROL_ADC) {
-        if (speedAvgAbs < 60) {
-          multipleTapDet(input1[inIdx].cmd, HAL_GetTick(), &MultipleTapBrake);
+      if (inIdx == CONTROL_ADC) {                                   // Only use use implementation below if pedals are in use (ADC input)
+        if (speedAvgAbs < 60) {                                     // Check if Hovercar is physically close to standstill to enable Double tap detection on Brake pedal for Reverse functionality
+          multipleTapDet(input1[inIdx].cmd, HAL_GetTick(), &MultipleTapBrake); // Brake pedal in this case is "input1" variable
+        }
+
+        if (input1[inIdx].cmd > 30) {                               // Brake pedal pressed: ignore throttle and use brake as reverse command
+          input2[inIdx].cmd = 0;                                     // Ignore throttle while brake is active
+          cruiseControl((uint8_t)rtP_Left.b_cruiseCtrlEna);         // Cruise control deactivated by Brake pedal if it was active
         }
       }
       #endif
@@ -270,8 +275,12 @@ int main(void) {
       #endif
 
       #ifdef VARIANT_HOVERCAR
-      if (inIdx == CONTROL_ADC) {
-        input1[inIdx].cmd = input1[inIdx].cmd;
+      if (inIdx == CONTROL_ADC) {                                   // Only use use implementation below if pedals are in use (ADC input)
+        if (speedAvg > 0) {                                         // Make sure the Brake pedal is opposite to the direction of motion AND it goes to 0 as we reach standstill (to avoid Reverse driving by Brake pedal) 
+          input1[inIdx].cmd = (int16_t)((-input1[inIdx].cmd * speedBlend) >> 15);
+        } else {
+          input1[inIdx].cmd = (int16_t)(( input1[inIdx].cmd * speedBlend) >> 15);
+        }
       }
       #endif
 
@@ -295,9 +304,26 @@ int main(void) {
 
       // ####### VARIANT_HOVERCAR #######
       #ifdef VARIANT_HOVERCAR
-      if (inIdx == CONTROL_ADC) {
-        speed = speed;
-        steer = 0;
+      if (inIdx == CONTROL_ADC) {               // Only use use implementation below if pedals are in use (ADC input)
+
+        #ifdef MULTI_MODE_DRIVE
+        if (speed >= max_speed) {
+          speed = max_speed;
+        }
+        #endif
+
+        if (input1[inIdx].cmd > 30) {                                // Brake active: ignore throttle and only allow limited reverse speed
+          if (MultipleTapBrake.b_multipleTap) {
+            speed = (int16_t)CLAMP(steer - speed, -REVERSE_SPEED_LIMIT, REVERSE_SPEED_LIMIT);
+          } else {
+            speed = 0;
+          }
+        } else if (!MultipleTapBrake.b_multipleTap) {  // Check driving direction
+          speed = steer + speed;                      // Forward driving: in this case steer = Brake, speed = Throttle
+        } else {
+          speed = steer - speed;                      // Reverse driving: in this case steer = Brake, speed = Throttle
+        }
+        steer = 0;                              // Do not apply steering to avoid side effects if STEER_COEFFICIENT is NOT 0
       }
       #endif
 
