@@ -5320,7 +5320,7 @@ void adcCalibLim(void) {
   uint16_t input_cal_timeout = 0;
 
 
-  if (inIdx == 1) {
+  if (inIdx == 0) {
     input_margin = 100;
   }
 
@@ -5530,7 +5530,7 @@ void calcInputCmd(InputStruct *in, int16_t out_min, int16_t out_max) {
 
 void readInputRaw(void) {
 
-    if (inIdx == 1) {
+    if (inIdx == 0) {
 
 
 
@@ -5540,7 +5540,7 @@ void readInputRaw(void) {
 
     }
 # 873 "Src/util.c"
-    if (inIdx == 0) {
+    if (inIdx == 1) {
 
 
 
@@ -5560,7 +5560,7 @@ void readInputRaw(void) {
 
 void handleTimeout(void) {
 
-    if (inIdx == 1) {
+    if (inIdx == 0) {
 
       if ((((input1[inIdx].raw) >= (input1[inIdx].min - 200)) && ((input1[inIdx].raw) <= (input1[inIdx].max + 200))) &&
           (((input2[inIdx].raw) >= (input2[inIdx].min - 200)) && ((input2[inIdx].raw) <= (input2[inIdx].max + 200)))) {
@@ -5578,13 +5578,19 @@ void handleTimeout(void) {
         timeoutFlgSerial_R = 1;
         timeoutCntSerial_R = 210;
 
-
+          inIdx = 0;
 
       } else {
-# 1002 "Src/util.c"
-      }
 
-        timeoutFlgSerial = timeoutFlgSerial_R;
+
+
+
+
+
+
+          inIdx = 1;
+
+      }
 # 1034 "Src/util.c"
     if (timeoutFlgADC || timeoutFlgSerial || timeoutFlgGen) {
       ctrlModReq = 0;
@@ -5622,7 +5628,7 @@ void readCommand(void) {
     handleTimeout();
 
 
-    if (inIdx == 1) {
+    if (inIdx == 0) {
       brakePressed = (uint8_t)(input1[inIdx].cmd > 50);
     }
     else {

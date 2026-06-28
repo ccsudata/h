@@ -92,9 +92,9 @@
 #define BUZZER_ENABLED
 
 #define FLASH_WRITE_KEY         0x1109
-#define CONTROL_ADC             1
+#define CONTROL_ADC             0
 #define FEEDBACK_SERIAL_USART3
-#define CONTROL_SERIAL_USART3   0
+#define CONTROL_SERIAL_USART3   1
 
 #define DUAL_INPUTS
 
