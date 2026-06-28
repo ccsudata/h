@@ -467,27 +467,6 @@ int main(void) {
     right_dc_curr = -(rtU_Right.i_DCLink * 100) / A2BIT_CONV;  // Right DC Link Current * 100
     dc_curr       = left_dc_curr + right_dc_curr;            // Total DC Link Current * 100
 
-    // ####### DEBUG SERIAL OUT #######
-    #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
-      if (main_loop_counter % 25 == 0) {    // Send data periodically every 125 ms      
-        #if defined(DEBUG_SERIAL_PROTOCOL)
-          process_debug();
-        #else
-          printf("in1:%i in2:%i tx2:%i rx2:%i cmdL:%i cmdR:%i BatADC:%i BatV:%i TempADC:%i Temp:%i \r\n",
-            input1[inIdx].raw,        // 1: INPUT1
-            input2[inIdx].raw,        // 2: INPUT2
-            adc_buffer.l_tx2,         // 3: raw ADC2 PA2 channel
-            adc_buffer.l_rx2,         // 4: raw ADC2 PA3 channel
-            cmdL,                     // 5: output command: [-1000, 1000]
-            cmdR,                     // 6: output command: [-1000, 1000]
-            adc_buffer.batt1,         // 7: for battery voltage calibration
-            batVoltageCalib,          // 8: for verifying battery voltage calibration
-            board_temp_adcFilt,       // 9: for board temperature calibration
-            board_temp_deg_c);        // 10: for verifying board temperature calibration
-        #endif
-      }
-    #endif
-
     // ####### FEEDBACK SERIAL OUT #######
     #if defined(FEEDBACK_SERIAL_USART2) || defined(FEEDBACK_SERIAL_USART3)
       if (main_loop_counter % 2 == 0) {    // Send data periodically every 10 ms
@@ -553,10 +532,12 @@ if (now - lastSendTick >= 1000U) {
         }
 
         int written = snprintf(buf, sizeof(buf), 
-                               "%lums L:%d R:%d V:%d T:%d%s [%s]\r\n", 
+                               "%lums L:%d R:%d TX2:%d RX2:%d V:%d T:%d%s [%s]\r\n", 
                                (unsigned long)now,
                                (int)Feedback.speedL_meas, 
                                (int)Feedback.speedR_meas, 
+                               (int)adc_buffer.l_tx2,
+                               (int)adc_buffer.l_rx2,
                                (int)Feedback.batVoltage, 
                                (int)Feedback.boardTemp,
                                err_detail,
