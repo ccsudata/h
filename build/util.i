@@ -4846,7 +4846,9 @@ typedef struct {
   int16_T DC_phaB;
   int16_T DC_phaC;
   uint8_T z_errCode;
+  int16_T n_mot_raw;
   int16_T n_mot;
+  int16_T a_elecAngle_raw;
   int16_T a_elecAngle;
   int16_T iq;
   int16_T id;

@@ -3177,6 +3177,10 @@ void BLDC_controller_step(RT_MODEL *const rtM)
    */
   rtY->DC_phaC = (int16_T)(rtb_Merge1 >> 4);
 
+  /* Raw fixed-point internal outputs kept for debug and slow-speed visibility */
+  rtY->n_mot_raw = Switch2;
+  rtY->a_elecAngle_raw = rtb_Merge_m;
+
   /* Outport: '<Root>/n_mot' incorporates:
    *  DataTypeConversion: '<S1>/Data Type Conversion1'
    */
