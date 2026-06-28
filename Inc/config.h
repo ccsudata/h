@@ -136,7 +136,9 @@
 
 #define RATE                    DEFAULT_RATE
 #define FILTER                  DEFAULT_FILTER
+#define THROTTLE_ACCEL_RATE     DEFAULT_RATE
+#define THROTTLE_RELEASE_RATE   160
 #define INPUTS_NR               2
-#define REVERSE_SPEED_LIMIT     250
+#define REVERSE_SPEED_LIMIT     200
 
 #endif

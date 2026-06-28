@@ -263,15 +263,14 @@ int main(void) {
           multipleTapDet(input1[inIdx].cmd, HAL_GetTick(), &MultipleTapBrake); // Brake pedal in this case is "input1" variable
         }
 
-        if (input1[inIdx].cmd > 30) {                               // Brake pedal pressed: ignore throttle and use brake as reverse command
-          input2[inIdx].cmd = 0;                                     // Ignore throttle while brake is active
+        if (input1[inIdx].cmd > 30) {                               // Brake pedal pressed: deactivate cruise control while braking
           cruiseControl((uint8_t)rtP_Left.b_cruiseCtrlEna);         // Cruise control deactivated by Brake pedal if it was active
         }
       }
       #endif
 
       #ifdef ELECTRIC_BRAKE_ENABLE
-        electricBrake(speedBlend, MultipleTapBrake.b_multipleTap);  // Apply Electric Brake. Only available and makes sense for TORQUE Mode
+        electricBrake(speedBlend, 0);  // Apply Electric Brake without any reverse-mode interaction
       #endif
 
       #ifdef VARIANT_HOVERCAR
@@ -296,7 +295,15 @@ int main(void) {
 
       // ####### LOW-PASS FILTER #######
       rateLimiter16(input1[inIdx].cmd, rate, &steerRateFixdt);
-      rateLimiter16(input2[inIdx].cmd, rate, &speedRateFixdt);
+
+      {
+        int16_t throttleRate = THROTTLE_ACCEL_RATE;
+        if ((input2[inIdx].cmd << 4) < speedRateFixdt) {
+          throttleRate = THROTTLE_RELEASE_RATE;
+        }
+        rateLimiter16(input2[inIdx].cmd, throttleRate, &speedRateFixdt);
+      }
+
       filtLowPass32(steerRateFixdt >> 4, FILTER, &steerFixdt);
       filtLowPass32(speedRateFixdt >> 4, FILTER, &speedFixdt);
       steer = (int16_t)(steerFixdt >> 16);  // convert fixed-point to integer
@@ -312,12 +319,14 @@ int main(void) {
         }
         #endif
 
-        if (ABS(input1[inIdx].cmd) > 30) {                           // Brake active: ignore throttle and command a limited reverse speed
-          speed = -(int16_t)CLAMP(ABS(input1[inIdx].cmd), 0, REVERSE_SPEED_LIMIT);
-        } else if (!MultipleTapBrake.b_multipleTap) {  // Check driving direction
-          speed = steer + speed;                      // Forward driving: in this case steer = Brake, speed = Throttle
+        if (ABS(input1[inIdx].cmd) > 30) {                           // Brake active: stop smoothly, but keep limited reverse on double tap
+          if (MultipleTapBrake.b_multipleTap && speedAvgAbs < 60) {
+            speed = -(int16_t)CLAMP(ABS(input1[inIdx].cmd), 0, REVERSE_SPEED_LIMIT);
+          } else {
+            speed = 0;
+          }
         } else {
-          speed = steer - speed;                      // Reverse driving: in this case steer = Brake, speed = Throttle
+          speed = steer + speed;                      // Forward driving: in this case steer = Brake, speed = Throttle
         }
         steer = 0;                              // Do not apply steering to avoid side effects if STEER_COEFFICIENT is NOT 0
       }

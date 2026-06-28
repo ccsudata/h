@@ -704,17 +704,26 @@ void standstillHold(void) {
  */
 void electricBrake(uint16_t speedBlend, uint8_t reverseDir) {
   #if defined(ELECTRIC_BRAKE_ENABLE) && (CTRL_TYP_SEL == FOC_CTRL) && (CTRL_MOD_REQ == TRQ_MODE)
-    int16_t brakeVal;
+    int16_t brakeVal = 0;
+    int16_t brakeCmd;
 
-    // Make sure the Brake pedal is opposite to the direction of motion AND it goes to 0 as we reach standstill (to avoid Reverse driving) 
-    if (speedAvg > 0) {
-      brakeVal = (int16_t)((-ELECTRIC_BRAKE_MAX * speedBlend) >> 15);
-    } else {
-      brakeVal = (int16_t)(( ELECTRIC_BRAKE_MAX * speedBlend) >> 15);
+    if (ABS(input1[inIdx].cmd) > 30) {
+      brakeCmd = (int16_t)CLAMP(ABS(input1[inIdx].cmd), 0, INPUT_MAX);
+      brakeVal = (int16_t)(((int32_t)brakeCmd * ELECTRIC_BRAKE_MAX) / INPUT_MAX);
+      brakeVal = (int16_t)(((int32_t)brakeVal * speedBlend) >> 15);
+
+      // Always oppose the actual motion. At standstill, the command decays to zero.
+      if (speedAvg > 0) {
+        brakeVal = -brakeVal;
+      } else if (speedAvg < 0) {
+        brakeVal =  brakeVal;
+      } else {
+        brakeVal = 0;
+      }
     }
 
-    // Check if direction is reversed
-    if (reverseDir) {
+    // Keep the double-tap reverse state only as a limited reverse command, not as a brake sign inversion.
+    if (reverseDir && speedAvgAbs < 60) {
       brakeVal = -brakeVal;
     }
 
