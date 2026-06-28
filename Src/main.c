@@ -312,12 +312,8 @@ int main(void) {
         }
         #endif
 
-        if (input1[inIdx].cmd > 30) {                                // Brake active: ignore throttle and only allow limited reverse speed
-          if (MultipleTapBrake.b_multipleTap) {
-            speed = (int16_t)CLAMP(steer - speed, -REVERSE_SPEED_LIMIT, REVERSE_SPEED_LIMIT);
-          } else {
-            speed = 0;
-          }
+        if (ABS(input1[inIdx].cmd) > 30) {                           // Brake active: ignore throttle and command a limited reverse speed
+          speed = -(int16_t)CLAMP(ABS(input1[inIdx].cmd), 0, REVERSE_SPEED_LIMIT);
         } else if (!MultipleTapBrake.b_multipleTap) {  // Check driving direction
           speed = steer + speed;                      // Forward driving: in this case steer = Brake, speed = Throttle
         } else {
