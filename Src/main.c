@@ -270,19 +270,60 @@ int main(void) {
       }
       #endif
 
-      #ifdef ELECTRIC_BRAKE_ENABLE
-        electricBrake(speedBlend, 0);  // Apply Electric Brake without any reverse-mode interaction
+      #if defined(ELECTRIC_BRAKE_ENABLE) && !defined(VARIANT_HOVERCAR)
+        electricBrake(speedBlend, 0);  // Apply electric brake only for non-hovercar variants.
       #endif
 
       #ifdef VARIANT_HOVERCAR
-      if (inIdx == CONTROL_ADC) {                                   // Keep the brake pedal command directly tied to pedal force so it can generate real opposing torque.
-        if (speedAvg > 0) {
-          input1[inIdx].cmd = (int16_t)(-ABS(input1[inIdx].cmd));
-        } else if (speedAvg < 0) {
-          input1[inIdx].cmd = (int16_t)( ABS(input1[inIdx].cmd));
-        } else {
-          input1[inIdx].cmd = 0;
+      if (inIdx == CONTROL_ADC) {                                   // Convert brake pedal input into a smooth, direction-aware speed target before filtering.
+        int16_t throttleCommand = input2[inIdx].cmd;
+        int16_t brakePedalRaw = ABS(input1[inIdx].cmd);
+        int16_t brakeTarget = 0;
+
+        if (brakePedalRaw > BRAKE_PEDAL_THRESHOLD) {
+          int32_t speedFactor = 1000;
+          if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
+            speedFactor = 0;
+          } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
+            speedFactor = ((int32_t)speedAvgAbs - BRAKE_MIN_SPEED_RPM) * 1000 /
+                          (BRAKE_SMOOTH_ZONE_RPM - BRAKE_MIN_SPEED_RPM);
+          }
+
+          int16_t brakeMagnitude = (int16_t)((brakePedalRaw * speedFactor) / 1000);
+          brakeMagnitude = (int16_t)CLAMP(brakeMagnitude, 0, BRAKE_MAX_LIMIT);
+
+          if (MultipleTapBrake.b_multipleTap && speedAvgAbs < 60) {
+            brakeTarget = -(int16_t)CLAMP(brakeMagnitude, 0, REVERSE_SPEED_LIMIT);
+          } else if (speedAvg > 0) {
+            brakeTarget = -brakeMagnitude;
+          } else if (speedAvg < 0) {
+            brakeTarget =  brakeMagnitude;
+          }
         }
+
+        if (brakeTarget != 0) {
+          int32_t brakeError = (int32_t)brakeTarget - filteredBrakeCmd;
+          if (brakeError > BRAKE_RAMP_STEP) {
+            filteredBrakeCmd += BRAKE_RAMP_STEP;
+          } else if (brakeError < -BRAKE_RAMP_STEP) {
+            filteredBrakeCmd -= BRAKE_RAMP_STEP;
+          } else {
+            filteredBrakeCmd = brakeTarget;
+          }
+          throttleCommand = filteredBrakeCmd;
+        } else {
+          if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
+            filteredBrakeCmd -= BRAKE_RAMP_STEP;
+          } else if (filteredBrakeCmd < -BRAKE_RAMP_STEP) {
+            filteredBrakeCmd += BRAKE_RAMP_STEP;
+          } else {
+            filteredBrakeCmd = 0;
+          }
+          throttleCommand = input2[inIdx].cmd;
+        }
+
+        input1[inIdx].cmd = 0;
+        input2[inIdx].cmd = throttleCommand;
       }
       #endif
 
@@ -301,10 +342,16 @@ int main(void) {
 
       {
         int16_t throttleRate = THROTTLE_ACCEL_RATE;
-        if ((input2[inIdx].cmd << 4) < speedRateFixdt) {
+        int16_t throttleCommand = input2[inIdx].cmd;
+        #ifdef VARIANT_HOVERCAR
+        if (inIdx == CONTROL_ADC) {
+          throttleCommand = input2[inIdx].cmd;
+        }
+        #endif
+        if ((throttleCommand << 4) < speedRateFixdt) {
           throttleRate = THROTTLE_RELEASE_RATE;
         }
-        rateLimiter16(input2[inIdx].cmd, throttleRate, &speedRateFixdt);
+        rateLimiter16(throttleCommand, throttleRate, &speedRateFixdt);
       }
 
       filtLowPass32(steerRateFixdt >> 4, FILTER, &steerFixdt);
@@ -322,47 +369,6 @@ int main(void) {
         }
         #endif
 
-        if (ABS(input1[inIdx].cmd) > 30) {                           // Smooth brake: ramp the request first, then scale by speed and deadband the zero-speed zone.
-          int16_t brakePedal = ABS(input1[inIdx].cmd);
-          int32_t brakeError = (int32_t)brakePedal - filteredBrakeCmd;
-          if (brakeError > BRAKE_RAMP_STEP) {
-            filteredBrakeCmd += BRAKE_RAMP_STEP;
-          } else if (brakeError < -BRAKE_RAMP_STEP) {
-            filteredBrakeCmd -= BRAKE_RAMP_STEP;
-          } else {
-            filteredBrakeCmd = brakePedal;
-          }
-
-          int32_t speedFactor = 1000;
-          if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
-            speedFactor = 0;
-          } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
-            speedFactor = ((int32_t)speedAvgAbs - BRAKE_MIN_SPEED_RPM) * 1000 /
-                          (BRAKE_SMOOTH_ZONE_RPM - BRAKE_MIN_SPEED_RPM);
-          }
-
-          int16_t brakeMagnitude = (int16_t)((filteredBrakeCmd * speedFactor) / 1000);
-          brakeMagnitude = (int16_t)CLAMP(brakeMagnitude, 0, BRAKE_MAX_LIMIT);
-
-          if (MultipleTapBrake.b_multipleTap && speedAvgAbs < 60) {
-            speed = -(int16_t)CLAMP(brakeMagnitude, 0, REVERSE_SPEED_LIMIT);
-          } else if (speedAvg > 0) {
-            speed = -brakeMagnitude;
-          } else if (speedAvg < 0) {
-            speed =  brakeMagnitude;
-          } else {
-            speed = 0;
-          }
-        } else {
-          if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
-            filteredBrakeCmd -= BRAKE_RAMP_STEP;
-          } else if (filteredBrakeCmd < -BRAKE_RAMP_STEP) {
-            filteredBrakeCmd += BRAKE_RAMP_STEP;
-          } else {
-            filteredBrakeCmd = 0;
-          }
-          speed = steer + speed;                      // Forward driving: in this case steer = Brake, speed = Throttle
-        }
         steer = 0;                              // Do not apply steering to avoid side effects if STEER_COEFFICIENT is NOT 0
       }
       #endif
