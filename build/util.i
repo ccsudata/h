@@ -5059,8 +5059,8 @@ ExtY rtY_Right;
 uint8_t inIdx = 0;
 uint8_t inIdx_prev = 0;
 
-InputStruct input1[2] = { {0, 0, 0, 2, 1000, 0, 2500, 0}, {0, 0, 0, 2, -1000, 0, 1000, 0} };
-InputStruct input2[2] = { {0, 0, 0, 2, -1000, 0, 1000, 0}, {0, 0, 0, 2, -1000, 0, 1000, 0} };
+InputStruct input1[2] = { {0, 0, 0, 2, 1095, 0, 3197, 50}, {0, 0, 0, 2, -1000, 0, 1000, 0} };
+InputStruct input2[2] = { {0, 0, 0, 2, 1029, 0, 3125, 50}, {0, 0, 0, 2, -1000, 0, 1000, 0} };
 
 
 
@@ -5166,7 +5166,7 @@ void Input_Init(void) {
     HAL_FLASH_Unlock();
     EE_Init();
     EE_ReadVariable(VirtAddVarTab[0], &writeCheck);
-    if (writeCheck == 0x1107) {
+    if (writeCheck == 0x1109) {
 
 
 
@@ -5752,7 +5752,7 @@ void saveConfig() {
 
 
       HAL_FLASH_Unlock();
-      EE_WriteVariable(VirtAddVarTab[0] , (uint16_t)0x1107);
+      EE_WriteVariable(VirtAddVarTab[0] , (uint16_t)0x1109);
       EE_WriteVariable(VirtAddVarTab[1] , (uint16_t)rtP_Left.i_max);
       EE_WriteVariable(VirtAddVarTab[2] , (uint16_t)rtP_Left.n_max);
       for (uint8_t i=0; i<2; i++) {
