@@ -153,8 +153,6 @@ static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes 
  */
 static void apply_brake_interlock(int16_t *throttleCommand, int16_t rawThrottleCmd, uint8_t brakeActive, uint8_t reverseRequested) {
   if (brakeActive) {
-    // If brake is pressed, keep throttle locked until physical throttle returns
-    // to near zero. The brake path itself already generates the braking output.
     brakeThrottleLock = 1;
   }
 
