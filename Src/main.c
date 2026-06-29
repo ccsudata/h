@@ -274,13 +274,20 @@ int main(void) {
         electricBrake(speedBlend, 0);  // Apply electric brake only for non-hovercar variants.
       #endif
 
+      int16_t throttleCommand = input2[inIdx].cmd;
+      int16_t brakePedalRaw = 0;
+      int16_t brakeTarget = 0;
+      int16_t brakeActive = 0;
+      int16_t reverseRequested = 0;
+      int16_t motionDir = (speedAvg > 0) ? 1 : ((speedAvg < 0) ? -1 : 0);
+
       #ifdef VARIANT_HOVERCAR
       if (inIdx == CONTROL_ADC) {                                   // Convert brake pedal input into a smooth, direction-aware speed target before filtering.
-        int16_t throttleCommand = input2[inIdx].cmd;
-        int16_t brakePedalRaw = ABS(input1[inIdx].cmd);
-        int16_t brakeTarget = 0;
+        brakePedalRaw = ABS(input1[inIdx].cmd);
+        brakeActive = (brakePedalRaw > BRAKE_PEDAL_THRESHOLD);
+        reverseRequested = (MultipleTapBrake.b_multipleTap && speedAvgAbs < 60) ? 1 : 0;
 
-        if (brakePedalRaw > BRAKE_PEDAL_THRESHOLD) {
+        if (brakeActive) {
           int32_t speedFactor = 1000;
           if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
             speedFactor = 0;
@@ -583,7 +590,7 @@ if (now - lastSendTick >= 1000U) {
         }
 
         int written = snprintf(buf, sizeof(buf),
-                               "%lums L:%d R:%d TX2:%d RX2:%d fs:%d st:%d cL:%d cR:%d V:%d T:%d%s [%s]\r\n",
+                               "%lums L:%d R:%d TX2:%d RX2:%d fs:%d st:%d cL:%d cR:%d V:%d T:%d rev:%d tap:%d dir:%d br:%d bt:%d fbc:%d thr:%d%s [%s]\r\n",
                                (unsigned long)now,
                                (int)Feedback.speedL_meas, 
                                (int)Feedback.speedR_meas, 
@@ -595,6 +602,13 @@ if (now - lastSendTick >= 1000U) {
                                (int)cmdR,
                                (int)Feedback.batVoltage, 
                                (int)Feedback.boardTemp,
+                               (int)reverseRequested,
+                               (int)MultipleTapBrake.b_multipleTap,
+                               (int)motionDir,
+                               (int)brakePedalRaw,
+                               (int)brakeTarget,
+                               (int)filteredBrakeCmd,
+                               (int)throttleCommand,
                                err_detail,
                                rx_hex_str);
 
