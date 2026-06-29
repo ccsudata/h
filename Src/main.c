@@ -327,7 +327,7 @@ int main(void) {
         }
 
         int16_t throttleInputMag = ABS(rawThrottleCmd);
-        if (reverseRequested && throttleInputMag > 10) {
+        if (reverseRequested && throttleInputMag > 10 && !brakeActive) {
           int16_t reverseMagnitude = (int16_t)CLAMP(throttleInputMag, 0, REVERSE_SPEED_LIMIT);
           filteredBrakeCmd = 0;
           throttleCommand = (int16_t)(-reverseMagnitude);
