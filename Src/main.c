@@ -153,9 +153,10 @@ static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes 
 static void apply_brake_interlock(int16_t *throttleCommand, int16_t rawThrottleCmd, uint8_t brakeActive, uint8_t reverseRequested) {
   if (brakeActive) {
     // If brake is pressed, ensure we lock throttle on release, but do not
-    // overwrite the computed brake throttle (which applies braking torque).
-    // Only cancel an active reverse command to avoid conflicting inputs.
-    if (reverseRequested && *throttleCommand < 0) {
+    // overwrite the computed brake torque command. Only cancel an active
+    // reverse drive request when the brake is not already generating braking
+    // torque.
+    if (reverseRequested && !brakeActive && *throttleCommand < 0) {
       *throttleCommand = 0; // cancel reverse request while brake pressed
     }
     brakeThrottleLock = 1; // lock throttle until user releases throttle to zero
@@ -366,7 +367,13 @@ int main(void) {
               }
             }
 
-            if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
+            if (speedAvg == 0) {
+              // At exact standstill, apply a small static damping (not full dynamic brake)
+              // to provide resistance while avoiding a full-step reversal that would
+              // produce a knife-edge oscillation. Scale is small (200/1000 = 0.2).
+              const int32_t STATIC_DAMPING_SCALE = 200; // out of BRAKE_MAX_LIMIT
+              throttleCommand = (int16_t)(-(filteredBrakeCmd * STATIC_DAMPING_SCALE) / BRAKE_MAX_LIMIT);
+            } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
               int32_t dampingCmd = ((int32_t)filteredBrakeCmd * (int32_t)ABS(speedAvg)) / BRAKE_SMOOTH_ZONE_RPM;
               throttleCommand = (speedAvg >= 0) ? (int16_t)(-dampingCmd) : (int16_t)(dampingCmd);
             } else if (speedAvg > 0) {
@@ -374,11 +381,7 @@ int main(void) {
             } else if (speedAvg < 0) {
               throttleCommand = (int16_t)(filteredBrakeCmd);
             } else {
-              // At exact standstill, apply a small static damping (not full dynamic brake)
-              // to provide resistance while avoiding a full-step reversal that would
-              // produce a knife-edge oscillation. Scale is small (200/1000 = 0.2).
-              const int32_t STATIC_DAMPING_SCALE = 200; // out of BRAKE_MAX_LIMIT
-              throttleCommand = (int16_t)(-(filteredBrakeCmd * STATIC_DAMPING_SCALE) / BRAKE_MAX_LIMIT);
+              throttleCommand = 0;
             }
           } else if (brakeThrottleLock) {
             if (ABS(rawThrottleCmd) < 10) {
