@@ -377,6 +377,17 @@ int main(void) {
           }
         }
 
+        /* Safety: if we started reversing but the brake pedal is detected as pressed
+           (e.g. unplugged wiring that reads as pressed), immediately stop reversing. */
+        if (reverseRequested && throttleCommand < 0 && brakeActive) {
+          #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
+          printf("Reverse blocked: brake pressed - stopping immediately\r\n");
+          #endif
+          throttleCommand = 0;         // cancel reverse throttle
+          brakeThrottleLock = 1;      // lock throttle until pedal released
+          filteredBrakeCmd = BRAKE_MAX_LIMIT; // apply full brake command to stop
+        }
+
         input1[inIdx].cmd = 0;
         input2[inIdx].cmd = throttleCommand;
       }
@@ -432,8 +443,20 @@ int main(void) {
         mixerFcn(speed << 4, steer << 4, &cmdR, &cmdL);   // This function implements the equations above
       #endif
 
+        // Safety: if ADC timeout (sensor lines disconnected) disable motors immediately
+        if (timeoutFlgADC) {
+          // Zero commands and disable outputs
+          cmdL = 0;
+          cmdR = 0;
+          pwml = 0;
+          pwmr = 0;
+          enable = 0;
+          #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
+          printf("ADC timeout detected - motors disabled\r\n");
+          #endif
+        }
 
-      // ####### SET OUTPUTS (if the target change is less than +/- 100) #######
+        // ####### SET OUTPUTS (if the target change is less than +/- 100) #######
       #ifdef INVERT_R_DIRECTION
         pwmr = cmdR;
       #else
