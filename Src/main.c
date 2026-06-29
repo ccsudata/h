@@ -150,17 +150,22 @@ static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes 
  *   the physical throttle returns to near-zero to avoid sudden re-acceleration.
  * - When `brakeThrottleLock` is set: keep throttle at zero until `rawThrottleCmd` small.
  */
-static void apply_brake_interlock(int16_t *throttleCommand, int16_t rawThrottleCmd, uint8_t brakeActive) {
+static void apply_brake_interlock(int16_t *throttleCommand, int16_t rawThrottleCmd, uint8_t brakeActive, uint8_t reverseRequested) {
   if (brakeActive) {
-    *throttleCommand = 0;
-    brakeThrottleLock = 1;
-    filteredBrakeCmd = BRAKE_MAX_LIMIT; // request full braking to stop quickly
+    // If brake is pressed, ensure we lock throttle on release, but do not
+    // overwrite the computed brake throttle (which applies braking torque).
+    // Only cancel an active reverse command to avoid conflicting inputs.
+    if (reverseRequested && *throttleCommand < 0) {
+      *throttleCommand = 0; // cancel reverse request while brake pressed
+    }
+    brakeThrottleLock = 1; // lock throttle until user releases throttle to zero
   } else if (brakeThrottleLock) {
+    // While locked, keep throttle at zero until physical throttle returns to near zero
     if (ABS(rawThrottleCmd) < 10) {
-      brakeThrottleLock = 0; // release lock only when throttle is near zero
+      brakeThrottleLock = 0; // release lock
       *throttleCommand = 0;
     } else {
-      *throttleCommand = 0; // keep throttle zero while locked
+      *throttleCommand = 0;
     }
   }
 }
@@ -399,7 +404,7 @@ int main(void) {
         }
 
         // Apply unified brake interlock for both forward and reverse
-        apply_brake_interlock(&throttleCommand, rawThrottleCmd, brakeActive);
+        apply_brake_interlock(&throttleCommand, rawThrottleCmd, brakeActive, reverseRequested);
 
         input1[inIdx].cmd = 0;
         input2[inIdx].cmd = throttleCommand;
