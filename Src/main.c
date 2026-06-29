@@ -5,7 +5,7 @@
 #include "setup.h"
 #include "config.h"
 #include "util.h"
-#include "BLDC_controller.h"
+#include "BLDC_controller.h"      /* BLDC's header file */
 #include "rtwtypes.h"
 #include "comms.h"
 
@@ -33,37 +33,34 @@ extern UART_HandleTypeDef huart3;
 
 volatile uint8_t uart_buf[200];
 
-// Matlab defines
-extern P    rtP_Left;
-extern P    rtP_Right;
-extern ExtY rtY_Left;
-extern ExtY rtY_Right;
-extern ExtU rtU_Left;
-extern ExtU rtU_Right;
+// Matlab defines - from auto-code generation
+//---------------
+extern P    rtP_Left;                   /* Block parameters (auto storage) */
+extern P    rtP_Right;                  /* Block parameters (auto storage) */
+extern ExtY rtY_Left;                   /* External outputs */
+extern ExtY rtY_Right;                  /* External outputs */
+extern ExtU rtU_Left;                   /* External inputs */
+extern ExtU rtU_Right;                  /* External inputs */
+//---------------
 
-extern uint8_t     inIdx;
+extern uint8_t     inIdx;               // input index used for dual-inputs
 extern uint8_t     inIdx_prev;
-extern InputStruct input1[];
-extern InputStruct input2[];
+extern InputStruct input1[];            // input structure
+extern InputStruct input2[];            // input structure
 
-extern int16_t speedAvg;
-extern int16_t speedAvgAbs;
-extern volatile uint32_t timeoutCntGen;
-extern volatile uint8_t  timeoutFlgGen;
-extern uint8_t timeoutFlgADC;
-extern uint8_t timeoutFlgSerial;
+extern int16_t speedAvg;                // Average measured speed
+extern int16_t speedAvgAbs;             // Average measured speed in absolute
+extern volatile uint32_t timeoutCntGen; // Timeout counter for the General timeout (PPM, PWM, Nunchuk)
+extern volatile uint8_t  timeoutFlgGen; // Timeout Flag for the General timeout (PPM, PWM, Nunchuk)
+extern uint8_t timeoutFlgADC;           // Timeout Flag for for ADC Protection: 0 = OK, 1 = Problem detected (line disconnected or wrong ADC data)
+extern uint8_t timeoutFlgSerial;        // Timeout Flag for Rx Serial command: 0 = OK, 1 = Problem detected (line disconnected or wrong Rx data)
 
-extern volatile int pwml;
-extern volatile int pwmr;
+extern volatile int pwml;               // global variable for pwm left. -1000 to 1000
+extern volatile int pwmr;               // global variable for pwm right. -1000 to 1000
 
-extern uint8_t enable;
+extern uint8_t enable;                  // global variable for motor enable
 
-extern int16_t batVoltage;
-
-// ---- 调试日志所需的外部声明 ----
-extern uint8_t g_ctrlErrDetail_Left;
-extern uint8_t g_ctrlErrDetail_Right;
-extern const uint8_t* get_usart3_rx_latest(uint32_t *len);
+extern int16_t batVoltage;              // global variable for battery voltage
 
 #if defined(SIDEBOARD_SERIAL_USART2)
 extern SerialSideboard Sideboard_L;
@@ -79,19 +76,24 @@ extern volatile uint16_t pwm_captured_ch1_value;
 extern volatile uint16_t pwm_captured_ch2_value;
 #endif
 
+// Variables for Debug Log Output
+extern const uint8_t *get_usart3_rx_latest(uint32_t *len);
+extern uint8_t g_ctrlErrDetail_Left;
+extern uint8_t g_ctrlErrDetail_Right;
+
 //------------------------------------------------------------------------
 // Global variables set here in main.c
 //------------------------------------------------------------------------
 uint8_t backwardDrive;
 extern volatile uint32_t buzzerTimer;
 volatile uint32_t main_loop_counter;
-int16_t batVoltageCalib;
-int16_t board_temp_deg_c;
-int16_t left_dc_curr;
-int16_t right_dc_curr;
-int16_t dc_curr;
-int16_t cmdL;
-int16_t cmdR;
+int16_t batVoltageCalib;         // global variable for calibrated battery voltage
+int16_t board_temp_deg_c;        // global variable for calibrated temperature in degrees Celsius
+int16_t left_dc_curr;            // global variable for Left DC Link current 
+int16_t right_dc_curr;           // global variable for Right DC Link current
+int16_t dc_curr;                 // global variable for Total DC Link current 
+int16_t cmdL;                    // global variable for Left Command 
+int16_t cmdR;                    // global variable for Right Command 
 
 //------------------------------------------------------------------------
 // Local variables
@@ -119,42 +121,60 @@ static uint8_t sideboard_leds_R;
 
 #ifdef VARIANT_TRANSPOTTER
   uint8_t  nunchuk_connected;
-  extern float    setDistance;
+  extern float    setDistance;  
+
   static uint8_t  checkRemote = 0;
   static uint16_t distance;
   static float    steering;
-  static int      distanceErr;
+  static int      distanceErr;  
   static int      lastDistance = 0;
   static uint16_t transpotter_counter = 0;
 #endif
 
-static int16_t    speed;
+static int16_t    speed;                // local variable for speed. -1000 to 1000
 #ifndef VARIANT_TRANSPOTTER
-  static int16_t  steer;
-  static int16_t  steerRateFixdt;
-  static int16_t  speedRateFixdt;
-  static int32_t  steerFixdt;
-  static int32_t  speedFixdt;
+  static int16_t  steer;                // local variable for steering. -1000 to 1000
+  static int16_t  steerRateFixdt;       // local fixed-point variable for steering rate limiter
+  static int16_t  speedRateFixdt;       // local fixed-point variable for speed rate limiter
+  static int32_t  steerFixdt;           // local fixed-point variable for steering low-pass filter
+  static int32_t  speedFixdt;           // local fixed-point variable for speed low-pass filter
 #endif
 
 static uint32_t    buzzerTimer_prev = 0;
 static uint32_t    inactivity_timeout_counter;
-static MultipleTap MultipleTapBrake;
+static MultipleTap MultipleTapBrake;    // define multiple tap functionality for the Brake pedal
 
-static uint16_t rate = RATE;
+static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes on startup
 
 #ifdef MULTI_MODE_DRIVE
   static uint8_t drive_mode;
   static uint16_t max_speed;
 #endif
 
-// ============ HOVERCAR 控制状态（全局静态） ============
-#ifdef VARIANT_HOVERCAR
-static int16_t filteredBrakeCmd   = 0;   // 刹车力度斜坡值
-static uint8_t reverseActive      = 0;   // 倒车模式激活
-static uint8_t brakeThrottleLock  = 0;   // 刹车释放后油门锁定
-#endif
+// =======================================================================
+// State Machine Configuration Macros
+// =======================================================================
+#define BRAKE_PEDAL_THRESHOLD  30
+#define BRAKE_MIN_SPEED_RPM    10
+#define BRAKE_SMOOTH_ZONE_RPM  60
+#define BRAKE_MAX_LIMIT        1000
+#define BRAKE_RAMP_STEP        10
+#define REVERSE_SPEED_LIMIT    250
+#define BRAKE_DEBOUNCE_TICKS   3
+#define SIGN(x) (((x) > 0) ? 1 : (((x) < 0) ? -1 : 0))
 
+// State Machine Static Variables
+static uint8_t brakeDebounceCounter = 0;
+static uint8_t brakeConfirmed       = 0;
+static uint8_t brakeConfirmedPrev   = 0;
+static int16_t filteredBrakeCmd     = 0;
+static uint8_t brakeThrottleLock    = 0;
+static uint8_t reverseActive        = 0;
+static int16_t throttleCommand      = 0;
+static int16_t brakeTarget          = 0;
+static int16_t rawBrake             = 0;
+static int16_t rawThrottle          = 0;
+static int8_t  dir                  = 0;
 
 int main(void) {
 
@@ -162,12 +182,19 @@ int main(void) {
   __HAL_RCC_AFIO_CLK_ENABLE();
   HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
   /* System interrupt init*/
+  /* MemoryManagement_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(MemoryManagement_IRQn, 0, 0);
+  /* BusFault_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(BusFault_IRQn, 0, 0);
+  /* UsageFault_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(UsageFault_IRQn, 0, 0);
+  /* SVCall_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SVCall_IRQn, 0, 0);
+  /* DebugMonitor_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DebugMonitor_IRQn, 0, 0);
+  /* PendSV_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(PendSV_IRQn, 0, 0);
+  /* SysTick_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 
   SystemClock_Config();
@@ -177,11 +204,11 @@ int main(void) {
   MX_TIM_Init();
   MX_ADC1_Init();
   MX_ADC2_Init();
-  BLDC_Init();
+  BLDC_Init();        // BLDC Controller Init
 
-  HAL_GPIO_WritePin(OFF_PORT, OFF_PIN, GPIO_PIN_SET);
-  Input_Lim_Init();
-  Input_Init();
+  HAL_GPIO_WritePin(OFF_PORT, OFF_PIN, GPIO_PIN_SET);   // Activate Latch
+  Input_Lim_Init();   // Input Limitations Init
+  Input_Init();       // Input Init
 
   HAL_ADC_Start(&hadc1);
   HAL_ADC_Start(&hadc2);
@@ -189,7 +216,7 @@ int main(void) {
   poweronMelody();
   HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_SET);
   
-  int32_t board_temp_adcFixdt = adc_buffer.temp << 16;
+  int32_t board_temp_adcFixdt = adc_buffer.temp << 16;  // Fixed-point filter output initialized with current ADC converted to fixed-point
   int16_t board_temp_adcFilt  = adc_buffer.temp;
 
   #ifdef MULTI_MODE_DRIVE
@@ -216,9 +243,11 @@ int main(void) {
     printf("Drive mode %i selected: max_speed:%i acc_rate:%i \r\n", drive_mode, max_speed, rate);
   #endif
 
+  // Loop until button is released
   while(HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN)) { HAL_Delay(10); }
 
   #ifdef MULTI_MODE_DRIVE
+    // Wait until triggers are released. Exit if timeout elapses (to unblock if the inputs are not calibrated)
     int iTimeout = 0;
     while((adc_buffer.l_rx2 + adc_buffer.l_tx2) >= (input1[0].min + input2[0].min) && iTimeout++ < 300) {
       HAL_Delay(10);
@@ -226,169 +255,142 @@ int main(void) {
   #endif
 
   while(1) {
-    if (buzzerTimer - buzzerTimer_prev > 16*DELAY_IN_MAIN_LOOP) {
+    if (buzzerTimer - buzzerTimer_prev > 16*DELAY_IN_MAIN_LOOP) {   // 1 ms = 16 ticks buzzerTimer
 
-    readCommand();
-    calcAvgSpeed();
+    readCommand();                        // Read Command: input1[inIdx].cmd, input2[inIdx].cmd
+    calcAvgSpeed();                       // Calculate average measured speed: speedAvg, speedAvgAbs
 
     #ifndef VARIANT_TRANSPOTTER
-      // ####### MOTOR ENABLING #######
+      // ####### MOTOR ENABLING: Only if the initial input is very small (for SAFETY) #######
       if (enable == 0 && !rtY_Left.z_errCode && !rtY_Right.z_errCode && 
           ABS(input1[inIdx].cmd) < 50 && ABS(input2[inIdx].cmd) < 50){
-        beepShort(6);
+        beepShort(6);                     // make 2 beeps indicating the motor enable
         beepShort(4); HAL_Delay(100);
-        steerFixdt = speedFixdt = 0;
-        enable = 1;
+        steerFixdt = speedFixdt = 0;      // reset filters
+        enable = 1;                       // enable motors
         #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
         printf("-- Motors enabled --\r\n");
         #endif
       }
 
-      // ####### SPEED BLEND #######
+      // ####### VARIANT_HOVERCAR #######
       #if defined(VARIANT_HOVERCAR) || defined(VARIANT_SKATEBOARD) || defined(ELECTRIC_BRAKE_ENABLE)
-        uint16_t speedBlend;
-        speedBlend = (uint16_t)(((CLAMP(speedAvgAbs,10,60) - 10) << 15) / 50);
+        uint16_t speedBlend;                                        // Calculate speed Blend, a number between [0, 1] in fixdt(0,16,15)
+        speedBlend = (uint16_t)(((CLAMP(speedAvgAbs,10,60) - 10) << 15) / 50); // speedBlend [0,1] is within [10 rpm, 60rpm]
       #endif
 
       #ifdef STANDSTILL_HOLD_ENABLE
-        standstillHold();
+        standstillHold();                                           // Apply Standstill Hold functionality. Only available and makes sense for VOLTAGE or TORQUE Mode
       #endif
 
-      // ---- 日志所需的局部变量（作用域覆盖整个循环体） ----
-      int16_t throttleCommand = input2[inIdx].cmd;
-      int16_t rawThrottleCmd  = input2[inIdx].cmd;
-      int16_t brakePedalRaw   = 0;
-      int16_t brakeTarget     = 0;
-      int16_t brakeActive     = 0;
-      int16_t reverseRequested = 0;
-      int16_t motionDir       = (speedAvg > 0) ? 1 : ((speedAvg < 0) ? -1 : 0);
-
-      // ####### VARIANT_HOVERCAR 重构后的统一控制 #######
       #ifdef VARIANT_HOVERCAR
-      if (inIdx == CONTROL_ADC) {
-        // 双击检测（仅低速时有效）
-        if (speedAvgAbs < 60) {
-          multipleTapDet(input1[inIdx].cmd, HAL_GetTick(), &MultipleTapBrake);
-        }
-        // 刹车时取消巡航
-        if (input1[inIdx].cmd > 30) {
-          cruiseControl((uint8_t)rtP_Left.b_cruiseCtrlEna);
-        }
-
-        rawThrottleCmd = input2[inIdx].cmd;
-        int16_t rawBrake = input1[inIdx].cmd;
-
-        // 小油门死区
-        if (ABS(rawThrottleCmd) < 10) {
-          rawThrottleCmd = 0;
+      if (inIdx == CONTROL_ADC) {                                   // Only use use implementation below if pedals are in use (ADC input)
+        
+        rawBrake = input1[inIdx].cmd;
+        rawThrottle = input2[inIdx].cmd;
+        dir = SIGN(speedAvg);
+        
+        // 1. Double tap detection
+        if (speedAvgAbs < 60) {                                     
+          multipleTapDet(rawBrake, HAL_GetTick(), &MultipleTapBrake); 
         }
 
-        brakePedalRaw = ABS(rawBrake);
-        brakeActive   = (brakePedalRaw > BRAKE_PEDAL_THRESHOLD);
-        reverseRequested = (MultipleTapBrake.b_multipleTap && speedAvgAbs < 60) ? 1 : 0;
-        motionDir     = (speedAvg > 0) ? 1 : ((speedAvg < 0) ? -1 : 0);
-
-        // 速度因子
-        int32_t speedFactor = 1000;
-        if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
-          speedFactor = 0;
-        } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
-          speedFactor = ((int32_t)speedAvgAbs - BRAKE_MIN_SPEED_RPM) * 1000 /
-                        (BRAKE_SMOOTH_ZONE_RPM - BRAKE_MIN_SPEED_RPM);
-        }
-
-        // ----- 倒车模式状态机（仅在非刹车且非锁定状态下允许进入/退出） -----
-        if (!brakeActive && !brakeThrottleLock) {
-          if (reverseRequested && ABS(rawThrottleCmd) > 10) {
-            reverseActive = 1;   // 进入倒车
-          } else if (reverseActive && ABS(rawThrottleCmd) < 10) {
-            reverseActive = 0;   // 油门松开退出倒车
-          }
+        // 2. Brake Debounce
+        if (rawBrake > BRAKE_PEDAL_THRESHOLD) {
+            if (brakeDebounceCounter < BRAKE_DEBOUNCE_TICKS) brakeDebounceCounter++;
+            else brakeConfirmed = 1;
         } else {
-          // 刹车或锁定时强制退出倒车
-          reverseActive = 0;
+            if (brakeDebounceCounter > 0) brakeDebounceCounter--;
+            else brakeConfirmed = 0;
         }
 
-        // ----- 刹车目标值计算（用于斜坡） -----
-        brakeTarget = 0;
-        if (brakeActive) {
-          int32_t scaled = ((int32_t)brakePedalRaw * speedFactor) / 1000;
-          brakeTarget = (int16_t)CLAMP(scaled, 0, BRAKE_MAX_LIMIT);
+        // 3. Throttle Lock logic (Falling Edge of brake)
+        if (brakeConfirmedPrev == 1 && brakeConfirmed == 0) {
+            if (rawThrottle > 10) {
+                brakeThrottleLock = 1;
+            }
+        }
+        if (rawThrottle < 10) {
+            brakeThrottleLock = 0;
         }
 
-        // 刹车力斜坡逼近
-        if (brakeTarget > filteredBrakeCmd) {
-          filteredBrakeCmd += BRAKE_RAMP_STEP;
-          if (filteredBrakeCmd > brakeTarget) filteredBrakeCmd = brakeTarget;
-        } else if (brakeTarget < filteredBrakeCmd) {
-          filteredBrakeCmd -= BRAKE_RAMP_STEP;
-          if (filteredBrakeCmd < brakeTarget) filteredBrakeCmd = brakeTarget;
+        // 4. Reverse Logic
+        if (speedAvgAbs < 60 && MultipleTapBrake.b_multipleTap && !brakeConfirmed && !brakeThrottleLock && rawThrottle > 10) {
+            reverseActive = 1;
+        }
+        if (rawThrottle < 10 || brakeConfirmed || brakeThrottleLock) {
+            reverseActive = 0;
         }
 
-        // ----- 生成最终的 throttleCommand -----
-        if (brakeActive) {
-          // 踩下刹车：置位锁定标志，输出制动扭矩
-          brakeThrottleLock = 1;
+        // 5. Generate Commands
+        if (brakeConfirmed) {
+            // Cancel cruise control
+            cruiseControl(0); 
 
-          if (speedAvgAbs <= BRAKE_MIN_SPEED_RPM) {
-            // 极低速/静止：不输出主动扭矩，防止蠕变
-            throttleCommand = 0;
-          } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
-            // 低速阻尼区：制动力与车速成正比
-            int32_t damping = ((int32_t)filteredBrakeCmd * speedAvgAbs) / BRAKE_SMOOTH_ZONE_RPM;
-            throttleCommand = (speedAvg >= 0) ? (int16_t)(-damping) : (int16_t)(damping);
-          } else {
-            // 全制动区：输出全部制动力，方向与运动相反
-            throttleCommand = (speedAvg > 0) ? (int16_t)(-filteredBrakeCmd)
-                                             : (int16_t)(filteredBrakeCmd);
-          }
-        }
+            // Calculate Target Brake Force
+            int32_t speedFactor = 0;
+            if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
+                speedFactor = 0;
+            } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
+                speedFactor = (speedAvgAbs - BRAKE_MIN_SPEED_RPM) * 1000 / (BRAKE_SMOOTH_ZONE_RPM - BRAKE_MIN_SPEED_RPM);
+            } else {
+                speedFactor = 1000;
+            }
+
+            brakeTarget = CLAMP((rawBrake * speedFactor) / 1000, 0, BRAKE_MAX_LIMIT);
+
+            // Ramp up/down Filtered Brake Command
+            if (filteredBrakeCmd < brakeTarget) {
+                filteredBrakeCmd = MIN(filteredBrakeCmd + BRAKE_RAMP_STEP, brakeTarget);
+            } else if (filteredBrakeCmd > brakeTarget) {
+                filteredBrakeCmd = MAX(filteredBrakeCmd - BRAKE_RAMP_STEP, brakeTarget);
+            }
+
+            // Output torque mapping based on speed
+            if (speedAvgAbs <= BRAKE_MIN_SPEED_RPM) {
+                throttleCommand = 0;
+            } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
+                throttleCommand = -dir * (filteredBrakeCmd * speedAvgAbs) / BRAKE_SMOOTH_ZONE_RPM;
+            } else {
+                throttleCommand = -dir * filteredBrakeCmd;
+            }
+        } 
         else if (brakeThrottleLock) {
-          // 刹车已释放但锁仍有效：强制油门为零，直到油门踏板归零
-          if (ABS(rawThrottleCmd) < 10) {
-            brakeThrottleLock = 0;   // 解锁
-          }
-          throttleCommand = 0;
-
-          // 刹车力缓慢归零
-          if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
-            filteredBrakeCmd -= BRAKE_RAMP_STEP;
-          } else if (filteredBrakeCmd < -BRAKE_RAMP_STEP) {
-            filteredBrakeCmd += BRAKE_RAMP_STEP;
-          } else {
+            // Lock activated, cut throttle, gently release remaining brake
+            throttleCommand = 0;
+            if (filteredBrakeCmd > 0) {
+                filteredBrakeCmd = MAX(filteredBrakeCmd - BRAKE_RAMP_STEP, 0);
+            }
+        } 
+        else if (reverseActive) {
+            // Reverse Mode
+            throttleCommand = -CLAMP(rawThrottle, 0, REVERSE_SPEED_LIMIT);
             filteredBrakeCmd = 0;
-          }
-        }
+        } 
         else {
-          // 非刹车、非锁定：正常驾驶
-          if (reverseActive) {
-            // 倒车模式：油门映射为负值，并严格限速
-            throttleCommand = -(int16_t)CLAMP(ABS(rawThrottleCmd), 0, REVERSE_SPEED_LIMIT);
-          } else {
-            // 前进：带死区直接输出
-            throttleCommand = (ABS(rawThrottleCmd) < 10) ? 0 : rawThrottleCmd;
-          }
+            // Normal Forward Drive
+            throttleCommand = (rawThrottle < 10) ? 0 : rawThrottle;
+            filteredBrakeCmd = 0;
         }
 
-        // 最终负值限幅（确保倒车速度不超过限制）
-        if (throttleCommand < 0) {
-          throttleCommand = (int16_t)MAX(throttleCommand, -REVERSE_SPEED_LIMIT);
-        }
+        // Save state for next cycle
+        brakeConfirmedPrev = brakeConfirmed;
 
-        input1[inIdx].cmd = 0;
-        input2[inIdx].cmd = throttleCommand;
+        // Route commands 
+        // Force input1 to 0 so steer calculation does not mix brake pedal
+        input1[inIdx].cmd = 0;  
+        // Throttle (or Braking/Reverse force) routed to input2
+        input2[inIdx].cmd = throttleCommand; 
       }
-      #endif // VARIANT_HOVERCAR
-
-      // ####### ELECTRIC BRAKE (NON-HOVERCAR) #######
-      #if defined(ELECTRIC_BRAKE_ENABLE) && !defined(VARIANT_HOVERCAR)
-        electricBrake(speedBlend, MultipleTapBrake.b_multipleTap);
       #endif
 
-      // ####### VARIANT_SKATEBOARD #######
+      #ifdef ELECTRIC_BRAKE_ENABLE
+        electricBrake(speedBlend, MultipleTapBrake.b_multipleTap);  // Apply Electric Brake. Only available and makes sense for TORQUE Mode
+      #endif
+
       #ifdef VARIANT_SKATEBOARD
-        if (input2[inIdx].cmd < 0) {
-          if (speedAvg > 0) {
+        if (input2[inIdx].cmd < 0) {                                // When Throttle is negative, it acts as brake. This condition is to make sure it goes to 0 as we reach standstill (to avoid Reverse driving) 
+          if (speedAvg > 0) {                                       // Make sure the braking is opposite to the direction of motion
             input2[inIdx].cmd  = (int16_t)(( input2[inIdx].cmd * speedBlend) >> 15);
           } else {
             input2[inIdx].cmd  = (int16_t)((-input2[inIdx].cmd * speedBlend) >> 15);
@@ -398,50 +400,36 @@ int main(void) {
 
       // ####### LOW-PASS FILTER #######
       rateLimiter16(input1[inIdx].cmd, rate, &steerRateFixdt);
-      {
-        int16_t throttleRate = THROTTLE_ACCEL_RATE;
-        int16_t throttleTarget = input2[inIdx].cmd;
-        if ((throttleTarget << 4) < speedRateFixdt) {
-          throttleRate = THROTTLE_RELEASE_RATE;
-        }
-        rateLimiter16(throttleTarget, throttleRate, &speedRateFixdt);
-      }
+      rateLimiter16(input2[inIdx].cmd, rate, &speedRateFixdt);
       filtLowPass32(steerRateFixdt >> 4, FILTER, &steerFixdt);
       filtLowPass32(speedRateFixdt >> 4, FILTER, &speedFixdt);
-      steer = (int16_t)(steerFixdt >> 16);
-      speed = (int16_t)(speedFixdt >> 16);
+      steer = (int16_t)(steerFixdt >> 16);  // convert fixed-point to integer
+      speed = (int16_t)(speedFixdt >> 16);  // convert fixed-point to integer
 
-      // ####### HOVERCAR FINAL MIXING #######
+      // ####### VARIANT_HOVERCAR (Final Mixing Adjustment) #######
       #ifdef VARIANT_HOVERCAR
-      if (inIdx == CONTROL_ADC) {
+      if (inIdx == CONTROL_ADC) {               
         #ifdef MULTI_MODE_DRIVE
         if (speed >= max_speed) {
           speed = max_speed;
         }
         #endif
-        steer = 0;
+        // No manual invert mapping needed, output generation is already completely handled by absolute state machine
+        steer = 0; // Ensures steer doesn't impact tank mix below for hovering mode if used 
       }
       #endif
 
-      // ####### MIXER #######
-      #if defined(TANK_STEERING) && !defined(VARIANT_HOVERCAR) && !defined(VARIANT_SKATEBOARD)
-        cmdL = steer;
+      #if defined(TANK_STEERING) && !defined(VARIANT_HOVERCAR) && !defined(VARIANT_SKATEBOARD) 
+        // Tank steering (no mixing)
+        cmdL = steer; 
         cmdR = speed;
-      #else
-        mixerFcn(speed << 4, steer << 4, &cmdR, &cmdL);
+      #else 
+        // ####### MIXER #######
+        mixerFcn(speed << 4, steer << 4, &cmdR, &cmdL);   // This function implements the equations above
       #endif
 
-      // ADC 超时保护
-      if (timeoutFlgADC) {
-        cmdL = 0; cmdR = 0;
-        pwml = 0; pwmr = 0;
-        enable = 0;
-        #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
-        printf("ADC timeout detected - motors disabled\r\n");
-        #endif
-      }
 
-      // ####### SET OUTPUTS #######
+      // ####### SET OUTPUTS (if the target change is less than +/- 100) #######
       #ifdef INVERT_R_DIRECTION
         pwmr = cmdR;
       #else
@@ -452,10 +440,100 @@ int main(void) {
       #else
         pwml = cmdL;
       #endif
-    #endif // !VARIANT_TRANSPOTTER
+    #endif
 
     #ifdef VARIANT_TRANSPOTTER
-      // ...（保留原有 Transpotter 逻辑，此处省略，实际应与您提供的一致）...
+      distance    = CLAMP(input1[inIdx].cmd - 180, 0, 4095);
+      steering    = (input2[inIdx].cmd - 2048) / 2048.0;
+      distanceErr = distance - (int)(setDistance * 1345);
+
+      if (nunchuk_connected == 0) {
+        cmdL = cmdL * 0.8f + (CLAMP(distanceErr + (steering*((float)MAX(ABS(distanceErr), 50)) * ROT_P), -850, 850) * -0.2f);
+        cmdR = cmdR * 0.8f + (CLAMP(distanceErr - (steering*((float)MAX(ABS(distanceErr), 50)) * ROT_P), -850, 850) * -0.2f);
+        if (distanceErr > 0) {
+          enable = 1;
+        }
+        if (distanceErr > -300) {
+          #ifdef INVERT_R_DIRECTION
+            pwmr = cmdR;
+          #else
+            pwmr = -cmdR;
+          #endif
+          #ifdef INVERT_L_DIRECTION
+            pwml = -cmdL;
+          #else
+            pwml = cmdL;
+          #endif
+
+          if (checkRemote) {
+            if (!HAL_GPIO_ReadPin(LED_PORT, LED_PIN)) {
+              //enable = 1;
+            } else {
+              enable = 0;
+            }
+          }
+        } else {
+          enable = 0;
+        }
+        timeoutCntGen = 0;
+        timeoutFlgGen = 0;
+      }
+
+      if (timeoutFlgGen) {
+        pwml = 0;
+        pwmr = 0;
+        enable = 0;
+        #ifdef SUPPORT_LCD
+          LCD_SetLocation(&lcd,  0, 0); LCD_WriteString(&lcd, "Len:");
+          LCD_SetLocation(&lcd,  8, 0); LCD_WriteString(&lcd, "m(");
+          LCD_SetLocation(&lcd, 14, 0); LCD_WriteString(&lcd, "m)");
+        #endif
+        HAL_Delay(1000);
+        nunchuk_connected = 0;
+      }
+
+      if ((distance / 1345.0) - setDistance > 0.5 && (lastDistance / 1345.0) - setDistance > 0.5) { // Error, robot too far away!
+        enable = 0;
+        beepLong(5);
+        #ifdef SUPPORT_LCD
+          LCD_ClearDisplay(&lcd);
+          HAL_Delay(5);
+          LCD_SetLocation(&lcd, 0, 0); LCD_WriteString(&lcd, "Emergency Off!");
+          LCD_SetLocation(&lcd, 0, 1); LCD_WriteString(&lcd, "Keeper too fast.");
+        #endif
+        poweroff();
+      }
+
+      #ifdef SUPPORT_NUNCHUK
+        if (transpotter_counter % 500 == 0) {
+          if (nunchuk_connected == 0 && enable == 0) {
+              if(Nunchuk_Read() == NUNCHUK_CONNECTED) {
+                #ifdef SUPPORT_LCD
+                  LCD_SetLocation(&lcd, 0, 0); LCD_WriteString(&lcd, "Nunchuk Control");
+                #endif
+                nunchuk_connected = 1;
+              }
+          } else {
+              nunchuk_connected = 0;
+          }
+        }   
+      #endif
+
+      #ifdef SUPPORT_LCD
+        if (transpotter_counter % 100 == 0) {
+          if (LCDerrorFlag == 1 && enable == 0) {
+
+          } else {
+            if (nunchuk_connected == 0) {
+              LCD_SetLocation(&lcd,  4, 0); LCD_WriteFloat(&lcd,distance/1345.0,2);
+              LCD_SetLocation(&lcd, 10, 0); LCD_WriteFloat(&lcd,setDistance,2);
+            }
+            LCD_SetLocation(&lcd,  4, 1); LCD_WriteFloat(&lcd,batVoltage, 1);
+            // LCD_SetLocation(&lcd, 11, 1); LCD_WriteFloat(&lcd,MAX(ABS(currentR), ABS(currentL)),2);
+          }
+        }
+      #endif
+      transpotter_counter++;
     #endif
 
     // ####### SIDEBOARDS HANDLING #######
@@ -471,26 +549,46 @@ int main(void) {
     #if defined(FEEDBACK_SERIAL_USART3)
       sideboardLeds(&sideboard_leds_R);
     #endif
+    
 
     // ####### CALC BOARD TEMPERATURE #######
     filtLowPass32(adc_buffer.temp, TEMP_FILT_COEF, &board_temp_adcFixdt);
-    board_temp_adcFilt  = (int16_t)(board_temp_adcFixdt >> 16);
+    board_temp_adcFilt  = (int16_t)(board_temp_adcFixdt >> 16);  // convert fixed-point to integer
     board_temp_deg_c    = (TEMP_CAL_HIGH_DEG_C - TEMP_CAL_LOW_DEG_C) * (board_temp_adcFilt - TEMP_CAL_LOW_ADC) / (TEMP_CAL_HIGH_ADC - TEMP_CAL_LOW_ADC) + TEMP_CAL_LOW_DEG_C;
 
     // ####### CALC CALIBRATED BATTERY VOLTAGE #######
     batVoltageCalib = batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC;
 
     // ####### CALC DC LINK CURRENT #######
-    left_dc_curr  = -(rtU_Left.i_DCLink * 100) / A2BIT_CONV;
-    right_dc_curr = -(rtU_Right.i_DCLink * 100) / A2BIT_CONV;
-    dc_curr       = left_dc_curr + right_dc_curr;
+    left_dc_curr  = -(rtU_Left.i_DCLink * 100) / A2BIT_CONV;   // Left DC Link Current * 100 
+    right_dc_curr = -(rtU_Right.i_DCLink * 100) / A2BIT_CONV;  // Right DC Link Current * 100
+    dc_curr       = left_dc_curr + right_dc_curr;              // Total DC Link Current * 100
 
-    // ####### FEEDBACK SERIAL OUT (详细调试日志) #######
+    // ####### DEBUG SERIAL OUT #######
+    #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
+      if (main_loop_counter % 25 == 0) {    // Send data periodically every 125 ms      
+        #if defined(DEBUG_SERIAL_PROTOCOL)
+          process_debug();
+        #else
+          printf("in1:%i in2:%i cmdL:%i cmdR:%i BatADC:%i BatV:%i TempADC:%i Temp:%i \r\n",
+            input1[inIdx].raw,        // 1: INPUT1
+            input2[inIdx].raw,        // 2: INPUT2
+            cmdL,                     // 3: output command: [-1000, 1000]
+            cmdR,                     // 4: output command: [-1000, 1000]
+            adc_buffer.batt1,         // 5: for battery voltage calibration
+            batVoltageCalib,          // 6: for verifying battery voltage calibration
+            board_temp_adcFilt,       // 7: for board temperature calibration
+            board_temp_deg_c);        // 8: for verifying board temperature calibration
+        #endif
+      }
+    #endif
+
+    // ####### FEEDBACK SERIAL OUT #######
     #if defined(FEEDBACK_SERIAL_USART2) || defined(FEEDBACK_SERIAL_USART3)
-      if (main_loop_counter % 2 == 0) {
-        Feedback.start	      = (uint16_t)SERIAL_START_FRAME;
-        Feedback.cmd1         = (int16_t)input1[inIdx].cmd;
-        Feedback.cmd2         = (int16_t)input2[inIdx].cmd;
+      if (main_loop_counter % 2 == 0) {    // Send data periodically every 10 ms
+        Feedback.start      = (uint16_t)SERIAL_START_FRAME;
+        Feedback.cmd1       = (int16_t)input1[inIdx].cmd;
+        Feedback.cmd2       = (int16_t)input2[inIdx].cmd;
         Feedback.speedR_meas  = (int16_t)rtY_Right.n_mot;
         Feedback.speedL_meas  = (int16_t)rtY_Left.n_mot;
         Feedback.batVoltage   = (int16_t)batVoltageCalib;
@@ -498,18 +596,22 @@ int main(void) {
 
         #if defined(FEEDBACK_SERIAL_USART2)
           if(__HAL_DMA_GET_COUNTER(huart2.hdmatx) == 0) {
-            Feedback.cmdLed   = (uint16_t)sideboard_leds_L;
-            Feedback.checksum = (uint16_t)(Feedback.start ^ Feedback.cmd1 ^ Feedback.cmd2 ^ Feedback.speedR_meas ^ Feedback.speedL_meas
-                                         ^ Feedback.batVoltage ^ Feedback.boardTemp ^ Feedback.cmdLed);
+            Feedback.cmdLed     = (uint16_t)sideboard_leds_L;
+            Feedback.checksum   = (uint16_t)(Feedback.start ^ Feedback.cmd1 ^ Feedback.cmd2 ^ Feedback.speedR_meas ^ Feedback.speedL_meas 
+                                           ^ Feedback.batVoltage ^ Feedback.boardTemp ^ Feedback.cmdLed);
+
             HAL_UART_Transmit_DMA(&huart2, (uint8_t *)&Feedback, sizeof(Feedback));
           }
         #endif
+        
+        // ------------------ NEW USART3 ADVANCED LOGGING ------------------
         #if defined(FEEDBACK_SERIAL_USART3)
           if(__HAL_DMA_GET_COUNTER(huart3.hdmatx) == 0) {
             Feedback.cmdLed   = (uint16_t)sideboard_leds_R;
             Feedback.checksum = (uint16_t)(Feedback.start ^ Feedback.cmd1 ^ Feedback.cmd2 ^ Feedback.speedR_meas ^ Feedback.speedL_meas
                                          ^ Feedback.batVoltage ^ Feedback.boardTemp ^ Feedback.cmdLed);
 
+            // Periodically emit the required state machine diagnostics log every 1 second (1000ms)
             static uint32_t lastSendTick = 0;
             uint32_t now = HAL_GetTick();
             if (now - lastSendTick >= 1000U) {
@@ -529,45 +631,45 @@ int main(void) {
                         if (rx_len > MAX_RX_BYTES_TO_PRINT) {
                             snprintf(rx_hex_str + p - 1, sizeof(rx_hex_str) - p + 1, "..");
                         }
-                    } else {
-                        snprintf(rx_hex_str, sizeof(rx_hex_str), "");
                     }
 
                     char err_detail[24] = {0};
                     if (g_ctrlErrDetail_Left != 0U || g_ctrlErrDetail_Right != 0U) {
-                        snprintf(err_detail, sizeof(err_detail), " errL:%02X errR:%02X",
-                                 (unsigned int)g_ctrlErrDetail_Left,
-                                 (unsigned int)g_ctrlErrDetail_Right);
+                        snprintf(err_detail, sizeof(err_detail), " errL:%02X errR:%02X", g_ctrlErrDetail_Left, g_ctrlErrDetail_Right);
                     }
 
                     int written = snprintf(buf, sizeof(buf),
                         "%lums L:%d R:%d TX2:%d RX2:%d fs:%d st:%d cL:%d cR:%d V:%d T:%d rev:%d tap:%d dir:%d br:%d bt:%d fbc:%d thr:%d%s [%s]\r\n",
-                        (unsigned long)now,
-                        (int)Feedback.speedL_meas,
-                        (int)Feedback.speedR_meas,
+                        now,
+                        (int)rtY_Left.n_mot,
+                        (int)rtY_Right.n_mot,
                         (int)adc_buffer.l_tx2,
                         (int)adc_buffer.l_rx2,
                         (int)speed,
                         (int)steer,
                         (int)cmdL,
                         (int)cmdR,
-                        (int)Feedback.batVoltage,
-                        (int)Feedback.boardTemp,
-                        (int)reverseRequested,
+                        (int)batVoltageCalib,
+                        (int)board_temp_deg_c,
+                        (int)reverseActive,
                         (int)MultipleTapBrake.b_multipleTap,
-                        (int)motionDir,
-                        (int)brakePedalRaw,
+                        (int)dir,
+                        (int)rawBrake,
                         (int)brakeTarget,
                         (int)filteredBrakeCmd,
                         (int)throttleCommand,
                         err_detail,
-                        rx_hex_str);
+                        rx_hex_str
+                    );
 
-                    if (written > 0 && written < sizeof(buf)) {
+                    if (written > 0) {
                         HAL_UART_Transmit_DMA(&huart3, (uint8_t *)buf, written);
+                        lastSendTick = now;
                     }
-                    lastSendTick = now;
                 }
+            } else {
+              // Only transmit fast binary feedback if we aren't transmitting the 1s text log
+              HAL_UART_Transmit_DMA(&huart3, (uint8_t *)&Feedback, sizeof(Feedback));
             }
           }
         #endif
@@ -578,31 +680,35 @@ int main(void) {
     poweroffPressCheck();
 
     // ####### BEEP AND EMERGENCY POWEROFF #######
-    if (TEMP_POWEROFF_ENABLE && board_temp_deg_c >= TEMP_POWEROFF && speedAvgAbs < 20){
-      printf("Powering off, temperature is too high\r\n");
+    if (TEMP_POWEROFF_ENABLE && board_temp_deg_c >= TEMP_POWEROFF && speedAvgAbs < 20){  // poweroff before mainboard burns OR low bat 3
+      #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
+        printf("Powering off, temperature is too high\r\n");
+      #endif
       poweroff();
     } else if ( BAT_DEAD_ENABLE && batVoltage < BAT_DEAD && speedAvgAbs < 20){
-      printf("Powering off, battery voltage is too low\r\n");
+      #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
+        printf("Powering off, battery voltage is too low\r\n");
+      #endif
       poweroff();
-    } else if (rtY_Left.z_errCode || rtY_Right.z_errCode) {
+    } else if (rtY_Left.z_errCode || rtY_Right.z_errCode) {                                          // 1 beep (low pitch): Motor error, disable motors
       enable = 0;
       beepCount(1, 24, 1);
-    } else if (timeoutFlgADC) {
+    } else if (timeoutFlgADC) {                                                                      // 2 beeps (low pitch): ADC timeout
       beepCount(2, 24, 1);
-    } else if (timeoutFlgSerial) {
+    } else if (timeoutFlgSerial) {                                                                   // 3 beeps (low pitch): Serial timeout
       beepCount(3, 24, 1);
-    } else if (timeoutFlgGen) {
+    } else if (timeoutFlgGen) {                                                                      // 4 beeps (low pitch): General timeout (PPM, PWM, Nunchuk)
       beepCount(4, 24, 1);
-    } else if (TEMP_WARNING_ENABLE && board_temp_deg_c >= TEMP_WARNING) {
+    } else if (TEMP_WARNING_ENABLE && board_temp_deg_c >= TEMP_WARNING) {                            // 5 beeps (low pitch): Mainboard temperature warning
       beepCount(5, 24, 1);
-    } else if (BAT_LVL1_ENABLE && batVoltage < BAT_LVL1) {
+    } else if (BAT_LVL1_ENABLE && batVoltage < BAT_LVL1) {                                           // 1 beep fast (medium pitch): Low bat 1
       beepCount(0, 10, 6);
-    } else if (BAT_LVL2_ENABLE && batVoltage < BAT_LVL2) {
+    } else if (BAT_LVL2_ENABLE && batVoltage < BAT_LVL2) {                                           // 1 beep slow (medium pitch): Low bat 2
       beepCount(0, 10, 30);
-    } else if (BEEPS_BACKWARD && (((cmdR < -50 || cmdL < -50) && speedAvg < 0) || MultipleTapBrake.b_multipleTap)) {
+    } else if (BEEPS_BACKWARD && (((cmdR < -50 || cmdL < -50) && speedAvg < 0) || MultipleTapBrake.b_multipleTap)) { // 1 beep fast (high pitch): Backward spinning motors
       beepCount(0, 5, 1);
       backwardDrive = 1;
-    } else {
+    } else {  // do not beep
       beepCount(0, 0, 0);
       backwardDrive = 0;
     }
@@ -613,17 +719,24 @@ int main(void) {
     if (abs(cmdL) > 50 || abs(cmdR) > 50) {
       inactivity_timeout_counter = 0;
     }
+
     #if defined(CRUISE_CONTROL_SUPPORT) || defined(STANDSTILL_HOLD_ENABLE)
-      if ((abs(rtP_Left.n_cruiseMotTgt)  > 50 && rtP_Left.b_cruiseCtrlEna) ||
+      if ((abs(rtP_Left.n_cruiseMotTgt)  > 50 && rtP_Left.b_cruiseCtrlEna) || 
           (abs(rtP_Right.n_cruiseMotTgt) > 50 && rtP_Right.b_cruiseCtrlEna)) {
         inactivity_timeout_counter = 0;
       }
     #endif
-    if (inactivity_timeout_counter > (INACTIVITY_TIMEOUT * 60 * 1000) / (DELAY_IN_MAIN_LOOP + 1)) {
-      printf("Powering off, wheels were inactive for too long\r\n");
+
+    if (inactivity_timeout_counter > (INACTIVITY_TIMEOUT * 60 * 1000) / (DELAY_IN_MAIN_LOOP + 1)) {  // rest of main loop needs maybe 1ms
+      #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
+        printf("Powering off, wheels were inactive for too long\r\n");
+      #endif
       poweroff();
     }
 
+
+    // HAL_GPIO_TogglePin(LED_PORT, LED_PIN);                 // This is to measure the main() loop duration with an oscilloscope connected to LED_PIN
+    // Update states
     inIdx_prev = inIdx;
     buzzerTimer_prev = buzzerTimer;
     main_loop_counter++;
@@ -632,34 +745,44 @@ int main(void) {
 }
 
 
-// ===========================================================
-/** System Clock Configuration
-*/
 void SystemClock_Config(void) {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+  RCC_OscInitTypeDef RCC_OscInitStruct;
+  RCC_ClkInitTypeDef RCC_ClkInitStruct;
+  RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
+  /**Initializes the CPU, AHB and APB busses clocks
+    */
   RCC_OscInitStruct.OscillatorType      = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState            = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.HSICalibrationValue = 16;
   RCC_OscInitStruct.PLL.PLLState        = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource       = RCC_PLLSOURCE_HSI_DIV2;
   RCC_OscInitStruct.PLL.PLLMUL          = RCC_PLL_MUL16;
   HAL_RCC_OscConfig(&RCC_OscInitStruct);
 
-  RCC_ClkInitStruct.ClockType      = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+  /**Initializes the CPU, AHB and APB busses clocks
+    */
+  RCC_ClkInitStruct.ClockType           = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource        = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider       = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider      = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider      = RCC_HCLK_DIV1;
+
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
 
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
-  PeriphClkInit.AdcClockSelection    = RCC_ADCPCLK2_DIV6;
+  PeriphClkInit.PeriphClockSelection    = RCC_PERIPHCLK_ADC;
+  // PeriphClkInit.AdcClockSelection    = RCC_ADCPCLK2_DIV8;  // 8 MHz
+  PeriphClkInit.AdcClockSelection       = RCC_ADCPCLK2_DIV4;  // 16 MHz
   HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
 
+  /**Configure the Systick interrupt time
+    */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq() / 1000);
+
+  /**Configure the Systick
+    */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
+
+  /* SysTick_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
