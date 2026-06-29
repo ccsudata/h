@@ -5,7 +5,7 @@
 #include "setup.h"
 #include "config.h"
 #include "util.h"
-#include "BLDC_controller.h"      /* BLDC's header file */
+#include "BLDC_controller.h"
 #include "rtwtypes.h"
 #include "comms.h"
 
@@ -33,7 +33,7 @@ extern UART_HandleTypeDef huart3;
 
 volatile uint8_t uart_buf[200];
 
-// Matlab defines - from auto-code generation
+// Matlab defines
 extern P    rtP_Left;
 extern P    rtP_Right;
 extern ExtY rtY_Left;
@@ -150,8 +150,9 @@ static uint16_t rate = RATE;
 
 // ============ HOVERCAR 控制状态（全局静态） ============
 #ifdef VARIANT_HOVERCAR
-static int16_t filteredBrakeCmd = 0;   // 刹车力度斜坡值
-static uint8_t reverseActive    = 0;   // 倒车模式激活标志
+static int16_t filteredBrakeCmd   = 0;   // 刹车力度斜坡值
+static uint8_t reverseActive      = 0;   // 倒车模式激活
+static uint8_t brakeThrottleLock  = 0;   // 刹车释放后油门锁定
 #endif
 
 
@@ -253,7 +254,7 @@ int main(void) {
         standstillHold();
       #endif
 
-      // ---- 日志所需的局部变量声明（作用域覆盖整个循环体） ----
+      // ---- 日志所需的局部变量（作用域覆盖整个循环体） ----
       int16_t throttleCommand = input2[inIdx].cmd;
       int16_t rawThrottleCmd  = input2[inIdx].cmd;
       int16_t brakePedalRaw   = 0;
@@ -274,11 +275,10 @@ int main(void) {
           cruiseControl((uint8_t)rtP_Left.b_cruiseCtrlEna);
         }
 
-        // 提取原始踏板值
         rawThrottleCmd = input2[inIdx].cmd;
         int16_t rawBrake = input1[inIdx].cmd;
 
-        // 预处理：小油门死区
+        // 小油门死区
         if (ABS(rawThrottleCmd) < 10) {
           rawThrottleCmd = 0;
         }
@@ -288,7 +288,7 @@ int main(void) {
         reverseRequested = (MultipleTapBrake.b_multipleTap && speedAvgAbs < 60) ? 1 : 0;
         motionDir     = (speedAvg > 0) ? 1 : ((speedAvg < 0) ? -1 : 0);
 
-        // 速度因子（用于刹车力缩放）
+        // 速度因子
         int32_t speedFactor = 1000;
         if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
           speedFactor = 0;
@@ -297,13 +297,16 @@ int main(void) {
                         (BRAKE_SMOOTH_ZONE_RPM - BRAKE_MIN_SPEED_RPM);
         }
 
-        // ----- 倒车模式状态机 -----
-        if (reverseRequested && !brakeActive && ABS(rawThrottleCmd) > 10 &&
-            speedAvgAbs < 30 && speedAvg < 20) {
-          reverseActive = 1;  // 进入倒车
-        } else if (reverseActive && (brakeActive || ABS(rawThrottleCmd) < 10 ||
-                                     speedAvgAbs > 30 || speedAvg > 20)) {
-          reverseActive = 0;  // 退出倒车
+        // ----- 倒车模式状态机（仅在非刹车且非锁定状态下允许进入/退出） -----
+        if (!brakeActive && !brakeThrottleLock) {
+          if (reverseRequested && ABS(rawThrottleCmd) > 10) {
+            reverseActive = 1;   // 进入倒车
+          } else if (reverseActive && ABS(rawThrottleCmd) < 10) {
+            reverseActive = 0;   // 油门松开退出倒车
+          }
+        } else {
+          // 刹车或锁定时强制退出倒车
+          reverseActive = 0;
         }
 
         // ----- 刹车目标值计算（用于斜坡） -----
@@ -324,7 +327,9 @@ int main(void) {
 
         // ----- 生成最终的 throttleCommand -----
         if (brakeActive) {
-          // 刹车状态：输出制动扭矩
+          // 踩下刹车：置位锁定标志，输出制动扭矩
+          brakeThrottleLock = 1;
+
           if (speedAvgAbs <= BRAKE_MIN_SPEED_RPM) {
             // 极低速/静止：不输出主动扭矩，防止蠕变
             throttleCommand = 0;
@@ -337,23 +342,39 @@ int main(void) {
             throttleCommand = (speedAvg > 0) ? (int16_t)(-filteredBrakeCmd)
                                              : (int16_t)(filteredBrakeCmd);
           }
-        } else {
-          // 非刹车：正常驾驶
+        }
+        else if (brakeThrottleLock) {
+          // 刹车已释放但锁仍有效：强制油门为零，直到油门踏板归零
+          if (ABS(rawThrottleCmd) < 10) {
+            brakeThrottleLock = 0;   // 解锁
+          }
+          throttleCommand = 0;
+
+          // 刹车力缓慢归零
+          if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
+            filteredBrakeCmd -= BRAKE_RAMP_STEP;
+          } else if (filteredBrakeCmd < -BRAKE_RAMP_STEP) {
+            filteredBrakeCmd += BRAKE_RAMP_STEP;
+          } else {
+            filteredBrakeCmd = 0;
+          }
+        }
+        else {
+          // 非刹车、非锁定：正常驾驶
           if (reverseActive) {
-            // 倒车模式：油门映射为负值，并限幅
+            // 倒车模式：油门映射为负值，并严格限速
             throttleCommand = -(int16_t)CLAMP(ABS(rawThrottleCmd), 0, REVERSE_SPEED_LIMIT);
           } else {
-            // 前进：带死区的直接油门值
+            // 前进：带死区直接输出
             throttleCommand = (ABS(rawThrottleCmd) < 10) ? 0 : rawThrottleCmd;
           }
         }
 
-        // 最终限幅（保证倒车速度不超过限制）
+        // 最终负值限幅（确保倒车速度不超过限制）
         if (throttleCommand < 0) {
           throttleCommand = (int16_t)MAX(throttleCommand, -REVERSE_SPEED_LIMIT);
         }
 
-        // 写入输入结构体：刹车踏板归零，油门踏板写入处理后的命令
         input1[inIdx].cmd = 0;
         input2[inIdx].cmd = throttleCommand;
       }
@@ -398,7 +419,7 @@ int main(void) {
           speed = max_speed;
         }
         #endif
-        steer = 0;  // HOVERCAR 不使用转向混控
+        steer = 0;
       }
       #endif
 
@@ -434,7 +455,7 @@ int main(void) {
     #endif // !VARIANT_TRANSPOTTER
 
     #ifdef VARIANT_TRANSPOTTER
-      // ...（保留原有 Transpotter 逻辑，此处省略以节省篇幅，实际应与您提供的一致）...
+      // ...（保留原有 Transpotter 逻辑，此处省略，实际应与您提供的一致）...
     #endif
 
     // ####### SIDEBOARDS HANDLING #######
@@ -464,7 +485,7 @@ int main(void) {
     right_dc_curr = -(rtU_Right.i_DCLink * 100) / A2BIT_CONV;
     dc_curr       = left_dc_curr + right_dc_curr;
 
-    // ####### FEEDBACK SERIAL OUT (保留原简单输出，可选) #######
+    // ####### FEEDBACK SERIAL OUT (详细调试日志) #######
     #if defined(FEEDBACK_SERIAL_USART2) || defined(FEEDBACK_SERIAL_USART3)
       if (main_loop_counter % 2 == 0) {
         Feedback.start	      = (uint16_t)SERIAL_START_FRAME;
@@ -488,10 +509,9 @@ int main(void) {
             Feedback.cmdLed   = (uint16_t)sideboard_leds_R;
             Feedback.checksum = (uint16_t)(Feedback.start ^ Feedback.cmd1 ^ Feedback.cmd2 ^ Feedback.speedR_meas ^ Feedback.speedL_meas
                                          ^ Feedback.batVoltage ^ Feedback.boardTemp ^ Feedback.cmdLed);
-            // 注意：下面替换为您指定的详细日志输出
+
             static uint32_t lastSendTick = 0;
             uint32_t now = HAL_GetTick();
-
             if (now - lastSendTick >= 1000U) {
                 if (huart3.gState == HAL_UART_STATE_READY && huart3.hdmatx->State == HAL_DMA_STATE_READY) {
                     static char buf[240];
@@ -604,7 +624,6 @@ int main(void) {
       poweroff();
     }
 
-    // Update states
     inIdx_prev = inIdx;
     buzzerTimer_prev = buzzerTimer;
     main_loop_counter++;
