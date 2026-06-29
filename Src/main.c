@@ -287,21 +287,23 @@ int main(void) {
         brakeActive = (brakePedalRaw > BRAKE_PEDAL_THRESHOLD);
         reverseRequested = (MultipleTapBrake.b_multipleTap && speedAvgAbs < 60) ? 1 : 0;
 
-        if (brakeActive) {
-          int32_t speedFactor = 1000;
-          if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
-            speedFactor = 0;
-          } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
-            speedFactor = ((int32_t)speedAvgAbs - BRAKE_MIN_SPEED_RPM) * 1000 /
-                          (BRAKE_SMOOTH_ZONE_RPM - BRAKE_MIN_SPEED_RPM);
-          }
+        int32_t speedFactor = 1000;
+        if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
+          speedFactor = 0;
+        } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
+          speedFactor = ((int32_t)speedAvgAbs - BRAKE_MIN_SPEED_RPM) * 1000 /
+                        (BRAKE_SMOOTH_ZONE_RPM - BRAKE_MIN_SPEED_RPM);
+        }
 
+        if (reverseRequested) {
+          int16_t reverseMagnitude = brakeActive ? (int16_t)((brakePedalRaw * speedFactor) / 1000) : REVERSE_SPEED_LIMIT;
+          reverseMagnitude = (int16_t)CLAMP(reverseMagnitude, 0, REVERSE_SPEED_LIMIT);
+          brakeTarget = -reverseMagnitude;
+        } else if (brakeActive) {
           int16_t brakeMagnitude = (int16_t)((brakePedalRaw * speedFactor) / 1000);
           brakeMagnitude = (int16_t)CLAMP(brakeMagnitude, 0, BRAKE_MAX_LIMIT);
 
-          if (MultipleTapBrake.b_multipleTap && speedAvgAbs < 60) {
-            brakeTarget = -(int16_t)CLAMP(brakeMagnitude, 0, REVERSE_SPEED_LIMIT);
-          } else if (speedAvg > 0) {
+          if (speedAvg > 0) {
             brakeTarget = -brakeMagnitude;
           } else if (speedAvg < 0) {
             brakeTarget =  brakeMagnitude;
@@ -317,7 +319,7 @@ int main(void) {
           } else {
             filteredBrakeCmd = brakeTarget;
           }
-          throttleCommand = filteredBrakeCmd;
+          throttleCommand = (int16_t)CLAMP(filteredBrakeCmd, -REVERSE_SPEED_LIMIT, 1000);
         } else {
           if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
             filteredBrakeCmd -= BRAKE_RAMP_STEP;
@@ -349,16 +351,11 @@ int main(void) {
 
       {
         int16_t throttleRate = THROTTLE_ACCEL_RATE;
-        int16_t throttleCommand = input2[inIdx].cmd;
-        #ifdef VARIANT_HOVERCAR
-        if (inIdx == CONTROL_ADC) {
-          throttleCommand = input2[inIdx].cmd;
-        }
-        #endif
-        if ((throttleCommand << 4) < speedRateFixdt) {
+        int16_t throttleTarget = input2[inIdx].cmd;
+        if ((throttleTarget << 4) < speedRateFixdt) {
           throttleRate = THROTTLE_RELEASE_RATE;
         }
-        rateLimiter16(throttleCommand, throttleRate, &speedRateFixdt);
+        rateLimiter16(throttleTarget, throttleRate, &speedRateFixdt);
       }
 
       filtLowPass32(steerRateFixdt >> 4, FILTER, &steerFixdt);
