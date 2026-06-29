@@ -139,6 +139,7 @@ static int16_t    speed;                // local variable for speed. -1000 to 10
 static uint32_t    buzzerTimer_prev = 0;
 static uint32_t    inactivity_timeout_counter;
 static int16_t     filteredBrakeCmd = 0;
+static uint8_t     brakeThrottleLock = 0;
 static MultipleTap MultipleTapBrake;    // define multiple tap functionality for the Brake pedal
 
 static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes on startup
@@ -319,6 +320,7 @@ int main(void) {
           }
 
           if (brakeActive) {
+            brakeThrottleLock = 1;
             throttleCommand = 0;
             if (brakeMagnitude > 0) {
               int32_t brakeError = (int32_t)brakeMagnitude - filteredBrakeCmd;
@@ -337,6 +339,21 @@ int main(void) {
               } else {
                 filteredBrakeCmd = 0;
               }
+            }
+          } else if (brakeThrottleLock) {
+            if (ABS(rawThrottleCmd) < 10) {
+              brakeThrottleLock = 0;
+              throttleCommand = 0;
+            } else {
+              throttleCommand = 0;
+            }
+
+            if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
+              filteredBrakeCmd -= BRAKE_RAMP_STEP;
+            } else if (filteredBrakeCmd < -BRAKE_RAMP_STEP) {
+              filteredBrakeCmd += BRAKE_RAMP_STEP;
+            } else {
+              filteredBrakeCmd = 0;
             }
           } else {
             if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
