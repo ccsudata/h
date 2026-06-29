@@ -139,31 +139,10 @@ static int16_t    speed;                // local variable for speed. -1000 to 10
 static uint32_t    buzzerTimer_prev = 0;
 static uint32_t    inactivity_timeout_counter;
 static int16_t     filteredBrakeCmd = 0;
-static uint8_t     brakeThrottleLock = 0;
 static uint8_t     reverseCommandActive = 0;
 static MultipleTap MultipleTapBrake;    // define multiple tap functionality for the Brake pedal
 
 static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes on startup
-
-/*
- * Brake interlock helper
- * - When `brakeActive` is true: cancel any throttle, lock throttle until
- *   the physical throttle returns to near-zero to avoid sudden re-acceleration.
- * - When `brakeThrottleLock` is set: keep throttle at zero until `rawThrottleCmd` small.
- */
-static void apply_brake_interlock(int16_t *throttleCommand, int16_t rawThrottleCmd, uint8_t brakeActive, uint8_t reverseRequested) {
-  if (brakeActive) {
-    brakeThrottleLock = 1;
-  }
-
-  if (brakeThrottleLock) {
-    if (ABS(rawThrottleCmd) < 10) {
-      brakeThrottleLock = 0; // release lock when throttle is released
-    } else {
-      *throttleCommand = 0; // prevent drive while lock is active
-    }
-  }
-}
 
 #ifdef MULTI_MODE_DRIVE
   static uint8_t drive_mode;
@@ -352,7 +331,6 @@ int main(void) {
           }
 
           if (brakeActive) {
-            brakeThrottleLock = 1;
             if (brakeMagnitude > 0) {
               int32_t brakeError = (int32_t)brakeMagnitude - filteredBrakeCmd;
               if (brakeError > BRAKE_RAMP_STEP) {
@@ -387,21 +365,6 @@ int main(void) {
             } else {
               throttleCommand = 0;
             }
-          } else if (brakeThrottleLock) {
-            if (ABS(rawThrottleCmd) < 10) {
-              brakeThrottleLock = 0;
-              throttleCommand = 0;
-            } else {
-              throttleCommand = 0;
-            }
-
-            if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
-              filteredBrakeCmd -= BRAKE_RAMP_STEP;
-            } else if (filteredBrakeCmd < -BRAKE_RAMP_STEP) {
-              filteredBrakeCmd += BRAKE_RAMP_STEP;
-            } else {
-              filteredBrakeCmd = 0;
-            }
           } else {
             if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
               filteredBrakeCmd -= BRAKE_RAMP_STEP;
@@ -413,9 +376,6 @@ int main(void) {
             throttleCommand = (ABS(rawThrottleCmd) < 10) ? 0 : rawThrottleCmd;
           }
         }
-
-        // Apply unified brake interlock for both forward and reverse
-        apply_brake_interlock(&throttleCommand, rawThrottleCmd, brakeActive, reverseRequested);
 
         if (throttleCommand < 0) {
           throttleCommand = (int16_t)MAX(throttleCommand, -REVERSE_SPEED_LIMIT);
