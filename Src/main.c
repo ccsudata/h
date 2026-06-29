@@ -307,20 +307,37 @@ int main(void) {
         } else {
           int16_t brakeMagnitude = 0;
           if (brakeActive) {
-            brakeMagnitude = (int16_t)((brakePedalRaw * speedFactor) / 1000);
-            brakeMagnitude = (int16_t)CLAMP(brakeMagnitude, 0, BRAKE_MAX_LIMIT);
+            int32_t pedalScaled = (int32_t)brakePedalRaw;
+            if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
+              pedalScaled = (pedalScaled * 1000) / 1000;
+            } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
+              pedalScaled = (pedalScaled * speedFactor) / 1000;
+            } else {
+              pedalScaled = (pedalScaled * speedFactor) / 1000;
+            }
+            brakeMagnitude = (int16_t)CLAMP(pedalScaled, 0, BRAKE_MAX_LIMIT);
           }
 
-          if (brakeMagnitude > 0) {
-            int32_t brakeError = (int32_t)brakeMagnitude - filteredBrakeCmd;
-            if (brakeError > BRAKE_RAMP_STEP) {
-              filteredBrakeCmd += BRAKE_RAMP_STEP;
-            } else if (brakeError < -BRAKE_RAMP_STEP) {
-              filteredBrakeCmd -= BRAKE_RAMP_STEP;
-            } else {
-              filteredBrakeCmd = brakeMagnitude;
-            }
+          if (brakeActive) {
             throttleCommand = 0;
+            if (brakeMagnitude > 0) {
+              int32_t brakeError = (int32_t)brakeMagnitude - filteredBrakeCmd;
+              if (brakeError > BRAKE_RAMP_STEP) {
+                filteredBrakeCmd += BRAKE_RAMP_STEP;
+              } else if (brakeError < -BRAKE_RAMP_STEP) {
+                filteredBrakeCmd -= BRAKE_RAMP_STEP;
+              } else {
+                filteredBrakeCmd = brakeMagnitude;
+              }
+            } else {
+              if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
+                filteredBrakeCmd -= BRAKE_RAMP_STEP;
+              } else if (filteredBrakeCmd < -BRAKE_RAMP_STEP) {
+                filteredBrakeCmd += BRAKE_RAMP_STEP;
+              } else {
+                filteredBrakeCmd = 0;
+              }
+            }
           } else {
             if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
               filteredBrakeCmd -= BRAKE_RAMP_STEP;
