@@ -340,7 +340,10 @@ int main(void) {
               }
             }
 
-            if (speedAvg > 0) {
+            if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
+              int32_t dampingCmd = ((int32_t)filteredBrakeCmd * (int32_t)ABS(speedAvg)) / BRAKE_SMOOTH_ZONE_RPM;
+              throttleCommand = (speedAvg >= 0) ? (int16_t)(-dampingCmd) : (int16_t)(dampingCmd);
+            } else if (speedAvg > 0) {
               throttleCommand = (int16_t)(-filteredBrakeCmd);
             } else if (speedAvg < 0) {
               throttleCommand = (int16_t)(filteredBrakeCmd);
