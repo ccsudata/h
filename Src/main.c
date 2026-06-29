@@ -81,6 +81,42 @@ static uint32_t    inactivity_timeout_counter;
 static MultipleTap MultipleTapBrake;
 static uint16_t rate = RATE;
 
+/* ---------- 刹车/倒车/锁定参数（可配置宏，未定义则用默认值） ---------- */
+#ifndef BRAKE_PEDAL_THRESHOLD
+#define BRAKE_PEDAL_THRESHOLD       30
+#endif
+#ifndef BRAKE_MIN_SPEED_RPM
+#define BRAKE_MIN_SPEED_RPM         10
+#endif
+#ifndef BRAKE_SMOOTH_ZONE_RPM
+#define BRAKE_SMOOTH_ZONE_RPM       60
+#endif
+#ifndef BRAKE_MAX_LIMIT
+#define BRAKE_MAX_LIMIT             1000
+#endif
+#ifndef BRAKE_RAMP_STEP
+#define BRAKE_RAMP_STEP             10
+#endif
+#ifndef REVERSE_SPEED_LIMIT
+#define REVERSE_SPEED_LIMIT         250
+#endif
+#ifndef BRAKE_DEBOUNCE_TICKS
+#define BRAKE_DEBOUNCE_TICKS        3
+#endif
+
+/* ---------- 刹车/倒车/锁定状态变量 ---------- */
+static uint8_t  brakeConfirmed      = 0;
+static int16_t  filteredBrakeCmd    = 0;
+static uint8_t  brakeThrottleLock   = 0;
+static uint8_t  reverseActive       = 0;
+static uint8_t  prevBrakeConfirmed  = 0;
+static uint8_t  brakeOnCnt          = 0;
+static uint8_t  brakeOffCnt         = 0;
+static uint32_t lastLogTick         = 0;
+
+/* 辅助宏 */
+#define SIGN(x) (((x) > 0) ? 1 : (((x) < 0) ? -1 : 0))
+
 int main(void) {
 
   HAL_Init();
@@ -132,51 +168,153 @@ int main(void) {
       enable = 1;
     }
 
-      uint16_t speedBlend;
-      speedBlend = (uint16_t)(((CLAMP(speedAvgAbs,10,60) - 10) << 15) / 50);
+    /* ---- 新控制逻辑开始 ---- */
 
-      if (inIdx == CONTROL_ADC) {
-        if (speedAvgAbs < 60) {
-          multipleTapDet(input1[inIdx].cmd, HAL_GetTick(), &MultipleTapBrake);
+    /* 读取映射后的踏板值 (0-1000 范围)：PRI_INPUT1=油门, PRI_INPUT2=刹车 */
+    int16_t rawThrottle = input1[inIdx].cmd;   /* 油门转把 */
+    int16_t rawBrake    = input2[inIdx].cmd;   /* 刹车踏板 */
+
+    /* ---------- 刹车信号防抖 ---------- */
+    if (rawBrake > BRAKE_PEDAL_THRESHOLD) {
+        if (brakeOnCnt < BRAKE_DEBOUNCE_TICKS) {
+            brakeOnCnt++;
         }
-
-        if (input1[inIdx].cmd > 30) {
-          input2[inIdx].cmd = (int16_t)((input2[inIdx].cmd * speedBlend) >> 15);
-          cruiseControl((uint8_t)rtP_Left.b_cruiseCtrlEna);
+        if (brakeOnCnt >= BRAKE_DEBOUNCE_TICKS) {
+            brakeConfirmed = 1;
+            brakeOffCnt = 0;
         }
-      }
+    } else {
+        if (brakeOffCnt < BRAKE_DEBOUNCE_TICKS) {
+            brakeOffCnt++;
+        }
+        if (brakeOffCnt >= BRAKE_DEBOUNCE_TICKS) {
+            brakeConfirmed = 0;
+            brakeOnCnt = 0;
+        }
+    }
 
-      if (inIdx == CONTROL_ADC) {
-        if (speedAvg > 0) {
-          input1[inIdx].cmd = (int16_t)((-input1[inIdx].cmd * speedBlend) >> 15);
+    /* ---------- 油门锁定（刹车释放下降沿） ---------- */
+    if (prevBrakeConfirmed && !brakeConfirmed && rawThrottle > 10) {
+        brakeThrottleLock = 1;
+    }
+    if (brakeThrottleLock && rawThrottle < 10) {
+        brakeThrottleLock = 0;
+    }
+
+    /* ---------- 刹车时取消巡航 ---------- */
+    if (rawBrake > 30) {
+        cruiseControl(0);
+    } else {
+        /* 原巡航激活逻辑（可根据需求保留） */
+        if (inIdx == CONTROL_ADC && speedAvgAbs < 60 && rawThrottle > 30) {
+            cruiseControl((uint8_t)rtP_Left.b_cruiseCtrlEna);
+        }
+    }
+
+    /* ---------- 双击检测（刹车踏板） ---------- */
+    if (speedAvgAbs < 60 && rawBrake > BRAKE_PEDAL_THRESHOLD) {
+        multipleTapDet(1, HAL_GetTick(), &MultipleTapBrake);
+    } else {
+        multipleTapDet(0, HAL_GetTick(), &MultipleTapBrake);
+    }
+
+    /* ---------- 倒车模式管理 ---------- */
+    if (!reverseActive) {
+        /* 进入条件 */
+        if (speedAvgAbs < 60 &&
+            MultipleTapBrake.b_multipleTap &&
+            !brakeConfirmed &&
+            !brakeThrottleLock &&
+            rawThrottle > 10) {
+            reverseActive = 1;
+        }
+    } else {
+        /* 退出条件 */
+        if (rawThrottle < 10 || brakeConfirmed || brakeThrottleLock) {
+            reverseActive = 0;
+            MultipleTapBrake.b_multipleTap = 0; /* 退出时清除双击标志 */
+        }
+    }
+
+    /* ---------- 刹车目标力计算 ---------- */
+    int32_t speedFactor;
+    if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
+        speedFactor = 0;
+    } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
+        speedFactor = (speedAvgAbs - BRAKE_MIN_SPEED_RPM) * 1000L / (BRAKE_SMOOTH_ZONE_RPM - BRAKE_MIN_SPEED_RPM);
+    } else {
+        speedFactor = 1000;
+    }
+
+    int32_t brakeTarget = (rawBrake * speedFactor) / 1000;
+    if (brakeTarget < 0) brakeTarget = 0;
+    if (brakeTarget > BRAKE_MAX_LIMIT) brakeTarget = BRAKE_MAX_LIMIT;
+
+    /* ---------- 刹车力斜坡逼近 ---------- */
+    if (filteredBrakeCmd < brakeTarget) {
+        filteredBrakeCmd += BRAKE_RAMP_STEP;
+        if (filteredBrakeCmd > brakeTarget) filteredBrakeCmd = brakeTarget;
+    } else if (filteredBrakeCmd > brakeTarget) {
+        filteredBrakeCmd -= BRAKE_RAMP_STEP;
+        if (filteredBrakeCmd < brakeTarget) filteredBrakeCmd = brakeTarget;
+    }
+
+    /* ---------- 综合油门命令计算（throttleCommand） ---------- */
+    int16_t throttleCommand = 0;
+
+    if (brakeConfirmed) {
+        /* 制动优先 */
+        if (speedAvgAbs <= BRAKE_MIN_SPEED_RPM) {
+            throttleCommand = 0;
+        } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
+            throttleCommand = (-SIGN(speedAvg) * filteredBrakeCmd * speedAvgAbs) / BRAKE_SMOOTH_ZONE_RPM;
         } else {
-          input1[inIdx].cmd = (int16_t)(( input1[inIdx].cmd * speedBlend) >> 15);
+            throttleCommand = -SIGN(speedAvg) * filteredBrakeCmd;
         }
-      }
-
-      rateLimiter16(input1[inIdx].cmd, rate, &steerRateFixdt);
-      rateLimiter16(input2[inIdx].cmd, rate, &speedRateFixdt);
-      filtLowPass32(steerRateFixdt >> 4, FILTER, &steerFixdt);
-      filtLowPass32(speedRateFixdt >> 4, FILTER, &speedFixdt);
-      steer = (int16_t)(steerFixdt >> 16);
-      speed = (int16_t)(speedFixdt >> 16);
-
-      if (inIdx == CONTROL_ADC) {
-        if (!MultipleTapBrake.b_multipleTap) {
-          speed = steer + speed;
+    } else if (brakeThrottleLock) {
+        /* 油门锁定 */
+        throttleCommand = 0;
+        /* 刹车力缓慢归零 */
+        filteredBrakeCmd = 0;  /* 锁定触发后直接归零，亦可斜坡归零；这里简单清零保证平滑 */
+    } else if (reverseActive) {
+        /* 倒车模式 */
+        int32_t limit = REVERSE_SPEED_LIMIT;
+        int32_t raw = rawThrottle;
+        if (raw > limit) raw = limit;
+        throttleCommand = -raw;  /* 负值表示倒车 */
+        if (throttleCommand < -REVERSE_SPEED_LIMIT) throttleCommand = -REVERSE_SPEED_LIMIT;
+    } else {
+        /* 正常前进 */
+        if (rawThrottle < 10) {
+            throttleCommand = 0;
         } else {
-          speed = steer - speed;
+            throttleCommand = rawThrottle;
         }
-        steer = 0;
-      }
+    }
 
-        mixerFcn(speed << 4, steer << 4, &cmdR, &cmdL);
+    /* ---------- 将最终命令写入输入通道 ---------- */
+    /* input1 用作转向，在 ADC 模式下强制置零 */
+    if (inIdx == CONTROL_ADC) {
+        input1[inIdx].cmd = 0;
+    }
+    input2[inIdx].cmd = throttleCommand;
 
-        pwmr = -cmdR;
+    /* ---------- 原有的命令平滑与混控 ---------- */
+    rateLimiter16(input1[inIdx].cmd, rate, &steerRateFixdt);
+    rateLimiter16(input2[inIdx].cmd, rate, &speedRateFixdt);
+    filtLowPass32(steerRateFixdt >> 4, FILTER, &steerFixdt);
+    filtLowPass32(speedRateFixdt >> 4, FILTER, &speedFixdt);
+    steer = (int16_t)(steerFixdt >> 16);
+    speed = (int16_t)(speedFixdt >> 16);
 
-        pwml = cmdL;
+    /* 混控器生成左右轮命令（转向为0时直行） */
+    mixerFcn(speed << 4, steer << 4, &cmdR, &cmdL);
+    pwmr = -cmdR;
+    pwml = cmdL;
 
-      sideboardLeds(&sideboard_leds_R);
+    /* ---- 新控制逻辑结束 ---- */
+
+    sideboardLeds(&sideboard_leds_R);
 
     filtLowPass32(adc_buffer.temp, TEMP_FILT_COEF, &board_temp_adcFixdt);
     board_temp_adcFilt  = (int16_t)(board_temp_adcFixdt >> 16);
@@ -188,7 +326,8 @@ int main(void) {
     right_dc_curr = -(rtU_Right.i_DCLink * 100) / A2BIT_CONV;
     dc_curr       = left_dc_curr + right_dc_curr;
 
-      if (main_loop_counter % 2 == 0) {
+    /* ---------- 串口反馈（保留原有协议） ---------- */
+    if (main_loop_counter % 2 == 0) {
         Feedback.start	        = (uint16_t)SERIAL_START_FRAME;
         Feedback.cmd1           = (int16_t)input1[inIdx].cmd;
         Feedback.cmd2           = (int16_t)input2[inIdx].cmd;
@@ -197,15 +336,86 @@ int main(void) {
         Feedback.batVoltage	    = (int16_t)batVoltageCalib;
         Feedback.boardTemp	    = (int16_t)board_temp_deg_c;
 
-          if(__HAL_DMA_GET_COUNTER(huart3.hdmatx) == 0) {
+        if(__HAL_DMA_GET_COUNTER(huart3.hdmatx) == 0) {
             Feedback.cmdLed     = (uint16_t)sideboard_leds_R;
             Feedback.checksum   = (uint16_t)(Feedback.start ^ Feedback.cmd1 ^ Feedback.cmd2 ^ Feedback.speedR_meas ^ Feedback.speedL_meas 
                                            ^ Feedback.batVoltage ^ Feedback.boardTemp ^ Feedback.cmdLed);
 
             HAL_UART_Transmit_DMA(&huart3, (uint8_t *)&Feedback, sizeof(Feedback));
-          }
-      }
+        }
+    }
 
+    /* ---------- 调试日志：每秒通过 USART3 输出一次状态 ---------- */
+    {
+        uint32_t now = HAL_GetTick();
+        if (now - lastLogTick >= 1000U) {
+            if (huart3.gState == HAL_UART_STATE_READY &&
+                huart3.hdmatx != NULL && huart3.hdmatx->State == HAL_DMA_STATE_READY) {
+
+                static char buf[256];
+                int motionDir = (speedAvg > 0) ? 1 : ((speedAvg < 0) ? -1 : 0);
+
+                /* 获取接收数据（长度最多12字节） */
+                char rx_hex_str[32] = {0};
+#if defined(FEEDBACK_SERIAL_USART3)
+                uint32_t rx_len = 0;
+                const uint8_t *rx_data = get_usart3_rx_latest(&rx_len);
+                if (rx_data != NULL && rx_len > 0) {
+                    int p = 0;
+                    uint32_t max_bytes = (rx_len > 12) ? 12 : rx_len;
+                    for (uint32_t i = 0; i < max_bytes; i++) {
+                        p += snprintf(rx_hex_str + p, sizeof(rx_hex_str) - p, "%02X ", rx_data[i]);
+                    }
+                    if (rx_len > 12) {
+                        snprintf(rx_hex_str + p - 1, sizeof(rx_hex_str) - p + 1, "..");
+                    }
+                } else {
+                    snprintf(rx_hex_str, sizeof(rx_hex_str), "");
+                }
+#else
+                snprintf(rx_hex_str, sizeof(rx_hex_str), "");
+#endif
+
+                /* 错误码 */
+                char err_detail[24] = {0};
+                if (g_ctrlErrDetail_Left != 0U || g_ctrlErrDetail_Right != 0U) {
+                    snprintf(err_detail, sizeof(err_detail), " errL:%02X errR:%02X",
+                             (unsigned int)g_ctrlErrDetail_Left,
+                             (unsigned int)g_ctrlErrDetail_Right);
+                }
+
+                int written = snprintf(buf, sizeof(buf),
+                    "%lums L:%d R:%d TX2:%d RX2:%d fs:%d st:%d cL:%d cR:%d V:%d T:%d rev:%d tap:%d dir:%d br:%d bt:%d fbc:%d thr:%d%s [%s]\r\n",
+                    (unsigned long)now,
+                    (int)Feedback.speedL_meas,
+                    (int)Feedback.speedR_meas,
+                    (int)adc_buffer.l_tx2,
+                    (int)adc_buffer.l_rx2,
+                    (int)speed,
+                    (int)steer,
+                    (int)cmdL,
+                    (int)cmdR,
+                    (int)Feedback.batVoltage,
+                    (int)Feedback.boardTemp,
+                    (int)reverseActive,
+                    (int)MultipleTapBrake.b_multipleTap,
+                    motionDir,
+                    (int)rawBrake,
+                    (int)brakeTarget,
+                    (int)filteredBrakeCmd,
+                    (int)throttleCommand,
+                    err_detail,
+                    rx_hex_str);
+
+                if (written > 0 && written < sizeof(buf)) {
+                    HAL_UART_Transmit_DMA(&huart3, (uint8_t *)buf, written);
+                }
+                lastLogTick = now;
+            }
+        }
+    }
+
+    /* ---------- 错误与报警 ---------- */
     poweroffPressCheck();
 
     if (TEMP_POWEROFF_ENABLE && board_temp_deg_c >= TEMP_POWEROFF && speedAvgAbs < 20){
@@ -227,7 +437,7 @@ int main(void) {
       beepCount(0, 10, 6);
     } else if (BAT_LVL2_ENABLE && batVoltage < BAT_LVL2) {
       beepCount(0, 10, 30);
-    } else if (BEEPS_BACKWARD && (((cmdR < -50 || cmdL < -50) && speedAvg < 0) || MultipleTapBrake.b_multipleTap)) {
+    } else if (BEEPS_BACKWARD && (((cmdR < -50 || cmdL < -50) && speedAvg < 0) || MultipleTapBrake.b_multipleTap || reverseActive)) {
       beepCount(0, 5, 1);
       backwardDrive = 1;
     } else {
@@ -244,6 +454,9 @@ int main(void) {
     if (inactivity_timeout_counter > (INACTIVITY_TIMEOUT * 60 * 1000) / (DELAY_IN_MAIN_LOOP + 1)) {
       poweroff();
     }
+
+    /* 保存上一周期刹车状态（用于下降沿检测） */
+    prevBrakeConfirmed = brakeConfirmed;
 
     inIdx_prev = inIdx;
     buzzerTimer_prev = buzzerTimer;
