@@ -144,6 +144,27 @@ static MultipleTap MultipleTapBrake;    // define multiple tap functionality for
 
 static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes on startup
 
+/*
+ * Brake interlock helper
+ * - When `brakeActive` is true: cancel any throttle, lock throttle until
+ *   the physical throttle returns to near-zero to avoid sudden re-acceleration.
+ * - When `brakeThrottleLock` is set: keep throttle at zero until `rawThrottleCmd` small.
+ */
+static void apply_brake_interlock(int16_t *throttleCommand, int16_t rawThrottleCmd, uint8_t brakeActive) {
+  if (brakeActive) {
+    *throttleCommand = 0;
+    brakeThrottleLock = 1;
+    filteredBrakeCmd = BRAKE_MAX_LIMIT; // request full braking to stop quickly
+  } else if (brakeThrottleLock) {
+    if (ABS(rawThrottleCmd) < 10) {
+      brakeThrottleLock = 0; // release lock only when throttle is near zero
+      *throttleCommand = 0;
+    } else {
+      *throttleCommand = 0; // keep throttle zero while locked
+    }
+  }
+}
+
 #ifdef MULTI_MODE_DRIVE
   static uint8_t drive_mode;
   static uint16_t max_speed;
@@ -377,16 +398,8 @@ int main(void) {
           }
         }
 
-        /* Safety: if we started reversing but the brake pedal is detected as pressed
-           (e.g. unplugged wiring that reads as pressed), immediately stop reversing. */
-        if (reverseRequested && throttleCommand < 0 && brakeActive) {
-          #if defined(DEBUG_SERIAL_USART2) || defined(DEBUG_SERIAL_USART3)
-          printf("Reverse blocked: brake pressed - stopping immediately\r\n");
-          #endif
-          throttleCommand = 0;         // cancel reverse throttle
-          brakeThrottleLock = 1;      // lock throttle until pedal released
-          filteredBrakeCmd = BRAKE_MAX_LIMIT; // apply full brake command to stop
-        }
+        // Apply unified brake interlock for both forward and reverse
+        apply_brake_interlock(&throttleCommand, rawThrottleCmd, brakeActive);
 
         input1[inIdx].cmd = 0;
         input2[inIdx].cmd = throttleCommand;
