@@ -295,9 +295,9 @@ int main(void) {
                         (BRAKE_SMOOTH_ZONE_RPM - BRAKE_MIN_SPEED_RPM);
         }
 
-        if (reverseRequested) {
-          int16_t reverseMagnitude = brakeActive ? (int16_t)((brakePedalRaw * speedFactor) / 1000) : REVERSE_SPEED_LIMIT;
-          reverseMagnitude = (int16_t)CLAMP(reverseMagnitude, 0, REVERSE_SPEED_LIMIT);
+        int16_t throttleInputMag = ABS(input2[inIdx].cmd);
+        if (reverseRequested && throttleInputMag > 10) {
+          int16_t reverseMagnitude = (int16_t)CLAMP(throttleInputMag, 0, REVERSE_SPEED_LIMIT);
           brakeTarget = -reverseMagnitude;
         } else if (brakeActive) {
           int16_t brakeMagnitude = (int16_t)((brakePedalRaw * speedFactor) / 1000);
