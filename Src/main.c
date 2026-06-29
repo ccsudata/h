@@ -275,6 +275,7 @@ int main(void) {
       #endif
 
       int16_t throttleCommand = input2[inIdx].cmd;
+      int16_t rawThrottleCmd = input2[inIdx].cmd;
       int16_t brakePedalRaw = 0;
       int16_t brakeTarget = 0;
       int16_t brakeActive = 0;
@@ -283,6 +284,9 @@ int main(void) {
 
       #ifdef VARIANT_HOVERCAR
       if (inIdx == CONTROL_ADC) {                                   // Convert brake pedal input into a smooth, direction-aware speed target before filtering.
+        if (ABS(rawThrottleCmd) < 10) {
+          rawThrottleCmd = 0;
+        }
         brakePedalRaw = ABS(input1[inIdx].cmd);
         brakeActive = (brakePedalRaw > BRAKE_PEDAL_THRESHOLD);
         reverseRequested = (MultipleTapBrake.b_multipleTap && speedAvgAbs < 60) ? 1 : 0;
@@ -295,40 +299,38 @@ int main(void) {
                         (BRAKE_SMOOTH_ZONE_RPM - BRAKE_MIN_SPEED_RPM);
         }
 
-        int16_t throttleInputMag = ABS(input2[inIdx].cmd);
+        int16_t throttleInputMag = ABS(rawThrottleCmd);
         if (reverseRequested && throttleInputMag > 10) {
           int16_t reverseMagnitude = (int16_t)CLAMP(throttleInputMag, 0, REVERSE_SPEED_LIMIT);
-          brakeTarget = -reverseMagnitude;
-        } else if (brakeActive) {
-          int16_t brakeMagnitude = (int16_t)((brakePedalRaw * speedFactor) / 1000);
-          brakeMagnitude = (int16_t)CLAMP(brakeMagnitude, 0, BRAKE_MAX_LIMIT);
-
-          if (speedAvg > 0) {
-            brakeTarget = -brakeMagnitude;
-          } else if (speedAvg < 0) {
-            brakeTarget =  brakeMagnitude;
-          }
-        }
-
-        if (brakeTarget != 0) {
-          int32_t brakeError = (int32_t)brakeTarget - filteredBrakeCmd;
-          if (brakeError > BRAKE_RAMP_STEP) {
-            filteredBrakeCmd += BRAKE_RAMP_STEP;
-          } else if (brakeError < -BRAKE_RAMP_STEP) {
-            filteredBrakeCmd -= BRAKE_RAMP_STEP;
-          } else {
-            filteredBrakeCmd = brakeTarget;
-          }
-          throttleCommand = (int16_t)CLAMP(filteredBrakeCmd, -REVERSE_SPEED_LIMIT, 1000);
+          filteredBrakeCmd = 0;
+          throttleCommand = (int16_t)(-reverseMagnitude);
         } else {
-          if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
-            filteredBrakeCmd -= BRAKE_RAMP_STEP;
-          } else if (filteredBrakeCmd < -BRAKE_RAMP_STEP) {
-            filteredBrakeCmd += BRAKE_RAMP_STEP;
-          } else {
-            filteredBrakeCmd = 0;
+          int16_t brakeMagnitude = 0;
+          if (brakeActive) {
+            brakeMagnitude = (int16_t)((brakePedalRaw * speedFactor) / 1000);
+            brakeMagnitude = (int16_t)CLAMP(brakeMagnitude, 0, BRAKE_MAX_LIMIT);
           }
-          throttleCommand = input2[inIdx].cmd;
+
+          if (brakeMagnitude > 0) {
+            int32_t brakeError = (int32_t)brakeMagnitude - filteredBrakeCmd;
+            if (brakeError > BRAKE_RAMP_STEP) {
+              filteredBrakeCmd += BRAKE_RAMP_STEP;
+            } else if (brakeError < -BRAKE_RAMP_STEP) {
+              filteredBrakeCmd -= BRAKE_RAMP_STEP;
+            } else {
+              filteredBrakeCmd = brakeMagnitude;
+            }
+            throttleCommand = 0;
+          } else {
+            if (filteredBrakeCmd > BRAKE_RAMP_STEP) {
+              filteredBrakeCmd -= BRAKE_RAMP_STEP;
+            } else if (filteredBrakeCmd < -BRAKE_RAMP_STEP) {
+              filteredBrakeCmd += BRAKE_RAMP_STEP;
+            } else {
+              filteredBrakeCmd = 0;
+            }
+            throttleCommand = (ABS(rawThrottleCmd) < 10) ? 0 : rawThrottleCmd;
+          }
         }
 
         input1[inIdx].cmd = 0;
