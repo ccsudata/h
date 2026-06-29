@@ -321,7 +321,6 @@ int main(void) {
 
           if (brakeActive) {
             brakeThrottleLock = 1;
-            throttleCommand = 0;
             if (brakeMagnitude > 0) {
               int32_t brakeError = (int32_t)brakeMagnitude - filteredBrakeCmd;
               if (brakeError > BRAKE_RAMP_STEP) {
@@ -339,6 +338,14 @@ int main(void) {
               } else {
                 filteredBrakeCmd = 0;
               }
+            }
+
+            if (speedAvg > 0) {
+              throttleCommand = (int16_t)(-filteredBrakeCmd);
+            } else if (speedAvg < 0) {
+              throttleCommand = (int16_t)(filteredBrakeCmd);
+            } else {
+              throttleCommand = 0;
             }
           } else if (brakeThrottleLock) {
             if (ABS(rawThrottleCmd) < 10) {
