@@ -140,6 +140,7 @@ static uint32_t    buzzerTimer_prev = 0;
 static uint32_t    inactivity_timeout_counter;
 static int16_t     filteredBrakeCmd = 0;
 static uint8_t     brakeThrottleLock = 0;
+static uint8_t     reverseCommandActive = 0;
 static MultipleTap MultipleTapBrake;    // define multiple tap functionality for the Brake pedal
 
 static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes on startup
@@ -324,10 +325,21 @@ int main(void) {
 
         int16_t throttleInputMag = ABS(rawThrottleCmd);
         if (reverseRequested && throttleInputMag > 10 && !brakeActive) {
-          int16_t reverseMagnitude = (int16_t)CLAMP(throttleInputMag, 0, REVERSE_SPEED_LIMIT);
-          filteredBrakeCmd = 0;
-          throttleCommand = (int16_t)(-reverseMagnitude);
+          if (speedAvgAbs > 30 || speedAvg > 20) {
+            reverseCommandActive = 0;
+            filteredBrakeCmd = 0;
+            throttleCommand = 0;
+          } else {
+            reverseCommandActive = 1;
+            int16_t reverseMagnitude = (int16_t)CLAMP(throttleInputMag, 0, REVERSE_SPEED_LIMIT);
+            filteredBrakeCmd = 0;
+            throttleCommand = (int16_t)(-reverseMagnitude);
+          }
         } else {
+          if (reverseCommandActive && (brakeActive || ABS(rawThrottleCmd) < 10 || speedAvgAbs > 30 || speedAvg > 20)) {
+            reverseCommandActive = 0;
+          }
+
           int16_t brakeMagnitude = 0;
           if (brakeActive) {
             int32_t pedalScaled = (int32_t)brakePedalRaw;
@@ -406,6 +418,10 @@ int main(void) {
 
         // Apply unified brake interlock for both forward and reverse
         apply_brake_interlock(&throttleCommand, rawThrottleCmd, brakeActive, reverseRequested);
+
+        if (throttleCommand < 0) {
+          throttleCommand = (int16_t)MAX(throttleCommand, -REVERSE_SPEED_LIMIT);
+        }
 
         input1[inIdx].cmd = 0;
         input2[inIdx].cmd = throttleCommand;
