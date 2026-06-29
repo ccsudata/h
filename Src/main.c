@@ -374,7 +374,11 @@ int main(void) {
             } else if (speedAvg < 0) {
               throttleCommand = (int16_t)(filteredBrakeCmd);
             } else {
-              throttleCommand = 0;
+              // At exact standstill, apply a small static damping (not full dynamic brake)
+              // to provide resistance while avoiding a full-step reversal that would
+              // produce a knife-edge oscillation. Scale is small (200/1000 = 0.2).
+              const int32_t STATIC_DAMPING_SCALE = 200; // out of BRAKE_MAX_LIMIT
+              throttleCommand = (int16_t)(-(filteredBrakeCmd * STATIC_DAMPING_SCALE) / BRAKE_MAX_LIMIT);
             }
           } else if (brakeThrottleLock) {
             if (ABS(rawThrottleCmd) < 10) {
