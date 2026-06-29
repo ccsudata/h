@@ -152,21 +152,16 @@ static uint16_t rate = RATE; // Adjustable rate to support multiple drive modes 
  */
 static void apply_brake_interlock(int16_t *throttleCommand, int16_t rawThrottleCmd, uint8_t brakeActive, uint8_t reverseRequested) {
   if (brakeActive) {
-    // If brake is pressed, ensure we lock throttle on release, but do not
-    // overwrite the computed brake torque command. Only cancel an active
-    // reverse drive request when the brake is not already generating braking
-    // torque.
-    if (reverseRequested && !brakeActive && *throttleCommand < 0) {
-      *throttleCommand = 0; // cancel reverse request while brake pressed
-    }
-    brakeThrottleLock = 1; // lock throttle until user releases throttle to zero
-  } else if (brakeThrottleLock) {
-    // While locked, keep throttle at zero until physical throttle returns to near zero
+    // If brake is pressed, keep throttle locked until physical throttle returns
+    // to near zero. The brake path itself already generates the braking output.
+    brakeThrottleLock = 1;
+  }
+
+  if (brakeThrottleLock) {
     if (ABS(rawThrottleCmd) < 10) {
-      brakeThrottleLock = 0; // release lock
-      *throttleCommand = 0;
+      brakeThrottleLock = 0; // release lock when throttle is released
     } else {
-      *throttleCommand = 0;
+      *throttleCommand = 0; // prevent drive while lock is active
     }
   }
 }
@@ -367,12 +362,11 @@ int main(void) {
               }
             }
 
-            if (speedAvg == 0) {
-              // At exact standstill, apply a small static damping (not full dynamic brake)
-              // to provide resistance while avoiding a full-step reversal that would
-              // produce a knife-edge oscillation. Scale is small (200/1000 = 0.2).
-              const int32_t STATIC_DAMPING_SCALE = 200; // out of BRAKE_MAX_LIMIT
-              throttleCommand = (int16_t)(-(filteredBrakeCmd * STATIC_DAMPING_SCALE) / BRAKE_MAX_LIMIT);
+            if (speedAvgAbs <= BRAKE_MIN_SPEED_RPM) {
+              // At very low speed or stop, do not issue active brake drive torque.
+              // This avoids small sensor noise or control dithering causing wheel creep
+              // when the wheels are already essentially stationary.
+              throttleCommand = 0;
             } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
               int32_t dampingCmd = ((int32_t)filteredBrakeCmd * (int32_t)ABS(speedAvg)) / BRAKE_SMOOTH_ZONE_RPM;
               throttleCommand = (speedAvg >= 0) ? (int16_t)(-dampingCmd) : (int16_t)(dampingCmd);
