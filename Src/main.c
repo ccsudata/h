@@ -109,7 +109,7 @@ static uint16_t rate = RATE;
 #define REVERSE_SPEED_LIMIT         250
 #endif
 
-/* ---------- 刹车/倒车/锁定状态（已去除防抖，所有判断直接基于刹车踏板实时状态） ---------- */
+/* ---------- 刹车/倒车/锁定状态 ---------- */
 static int16_t  filteredBrakeCmd    = 0;
 static uint8_t  brakeThrottleLock   = 0;
 static uint8_t  reverseActive       = 0;
@@ -171,7 +171,7 @@ int main(void)
                 enable = 1;
             }
 
-            // ---- 3. 获取原始油门/刹车值（修正：input1 为刹车踏板，input2 为油门踏板） ----
+            // ---- 3. 获取原始油门/刹车值（input1 为刹车踏板，input2 为油门踏板） ----
             int16_t rawBrake    = input1[inIdx].cmd;   // 刹车踏板
             int16_t rawThrottle = input2[inIdx].cmd;   // 油门踏板
 
@@ -182,7 +182,7 @@ int main(void)
             if (prevBrakePressed && !brakePressed && rawThrottle > 10) {
                 brakeThrottleLock = 1;
             }
-            if (brakeThrottleLock && rawThrottle < 30) {
+            if (brakeThrottleLock && rawThrottle < 25) {
                 brakeThrottleLock = 0;
             }
 
@@ -196,8 +196,9 @@ int main(void)
             }
 
             // ---- 7. 双击检测（刹车踏板） ----
-            if (speedAvgAbs < 60 && brakePressed) {
-                multipleTapDet(1, HAL_GetTick(), &MultipleTapBrake);
+            // 传入刹车原始值，让 multipleTapDet 内部判断阈值
+            if (speedAvgAbs < 60) {
+                multipleTapDet(rawBrake, HAL_GetTick(), &MultipleTapBrake);
             } else {
                 multipleTapDet(0, HAL_GetTick(), &MultipleTapBrake);
             }
