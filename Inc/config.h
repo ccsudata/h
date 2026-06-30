@@ -145,16 +145,29 @@
 #define USART3_BAUD             115200
 #define USART3_WORDLENGTH       UART_WORDLENGTH_8B
 
+/* 油门与转向平滑参数 */
 #define RATE                    DEFAULT_RATE
 #define FILTER                  DEFAULT_FILTER
 #define THROTTLE_ACCEL_RATE     DEFAULT_RATE
 #define THROTTLE_RELEASE_RATE   160
+
 #define INPUTS_NR               2
+
+/* 倒车速度限制 */
 #define REVERSE_SPEED_LIMIT     200
+
+/* 刹车力度与平滑 */
 #define BRAKE_MIN_SPEED_RPM     10
 #define BRAKE_SMOOTH_ZONE_RPM   150
 #define BRAKE_PEDAL_THRESHOLD   45
 #define BRAKE_RAMP_STEP         20
 #define BRAKE_MAX_LIMIT         1000
 
-#endif
+/* 倒车切换条件 */
+#define LOW_SPEED_FOR_REVERSE       20   /* 允许切换倒车的最高转速 (rpm) */
+#define HARD_BRAKE_THRESHOLD       500   /* 双击检测必须超过的刹车力度 */
+
+/* 踏板归零阈值 */
+#define PEDAL_ZERO_THRESHOLD        30   /* 油门小于此值视为完全松开 */
+
+#endif /* CONFIG_H */

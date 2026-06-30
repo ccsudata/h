@@ -80,28 +80,34 @@ static int32_t speedFixdt;
 static uint32_t buzzerTimer_prev = 0;
 static uint32_t inactivity_timeout_counter;
 static MultipleTap MultipleTapBrake;
-static uint16_t rate = RATE;
+static uint16_t rate;
 
 #ifndef BRAKE_PEDAL_THRESHOLD
-#define BRAKE_PEDAL_THRESHOLD       30
+#define BRAKE_PEDAL_THRESHOLD       45
 #endif
 #ifndef BRAKE_MIN_SPEED_RPM
 #define BRAKE_MIN_SPEED_RPM         10
 #endif
 #ifndef BRAKE_SMOOTH_ZONE_RPM
-#define BRAKE_SMOOTH_ZONE_RPM       60
+#define BRAKE_SMOOTH_ZONE_RPM       150
 #endif
 #ifndef BRAKE_MAX_LIMIT
 #define BRAKE_MAX_LIMIT             1000
 #endif
 #ifndef BRAKE_RAMP_STEP
-#define BRAKE_RAMP_STEP             10
+#define BRAKE_RAMP_STEP             20
 #endif
 #ifndef REVERSE_SPEED_LIMIT
-#define REVERSE_SPEED_LIMIT         250
+#define REVERSE_SPEED_LIMIT         200
 #endif
 
-#define PEDAL_ZERO_THRESHOLD        30   /* 油门归零阈值 */
+#define PEDAL_ZERO_THRESHOLD        30
+#ifndef LOW_SPEED_FOR_REVERSE
+#define LOW_SPEED_FOR_REVERSE       20
+#endif
+#ifndef HARD_BRAKE_THRESHOLD
+#define HARD_BRAKE_THRESHOLD       500
+#endif
 
 static int16_t  filteredBrakeCmd    = 0;
 static uint8_t  brakeThrottleLock   = 0;
@@ -196,15 +202,15 @@ int main(void)
                 }
             }
 
-            /* ---- 7. 双击检测 ---- */
-            if (speedAvgAbs < 60) {
+            /* ---- 7. 双击检测（仅低速且大力刹车时有效） ---- */
+            if (speedAvgAbs < LOW_SPEED_FOR_REVERSE && rawBrake > HARD_BRAKE_THRESHOLD) {
                 multipleTapDet(rawBrake, HAL_GetTick(), &MultipleTapBrake);
             } else {
                 multipleTapDet(0, HAL_GetTick(), &MultipleTapBrake);
             }
 
-            /* ---- 8. 倒车模式切换（双击即切换） ---- */
-            if (MultipleTapBrake.b_multipleTap) {
+            /* ---- 8. 倒车模式切换（双击即切换，且必须低速） ---- */
+            if (MultipleTapBrake.b_multipleTap && speedAvgAbs < LOW_SPEED_FOR_REVERSE) {
                 reverseActive = !reverseActive;
                 reverseThrottleLock = 0;
                 memset(&MultipleTapBrake, 0, sizeof(MultipleTapBrake));
@@ -272,7 +278,13 @@ int main(void)
             }
             input2[inIdx].cmd = throttleCommand;
 
-            /* ---- 14. 命令平滑 & 混控 ---- */
+            /* ---- 14. 命令平滑（区分加速/减速速率） ---- */
+            if (input2[inIdx].cmd < (speedRateFixdt >> 4)) {
+                rate = THROTTLE_RELEASE_RATE;
+            } else {
+                rate = THROTTLE_ACCEL_RATE;
+            }
+
             rateLimiter16(input1[inIdx].cmd, rate, &steerRateFixdt);
             rateLimiter16(input2[inIdx].cmd, rate, &speedRateFixdt);
             filtLowPass32(steerRateFixdt >> 4, FILTER, &steerFixdt);
