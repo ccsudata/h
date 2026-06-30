@@ -108,18 +108,12 @@ static uint16_t rate = RATE;
 #ifndef REVERSE_SPEED_LIMIT
 #define REVERSE_SPEED_LIMIT         250
 #endif
-#ifndef BRAKE_DEBOUNCE_TICKS
-#define BRAKE_DEBOUNCE_TICKS        3
-#endif
 
-/* ---------- 刹车/倒车/锁定状态 ---------- */
-static uint8_t  brakeConfirmed      = 0;
+/* ---------- 刹车/倒车/锁定状态（已去除防抖，所有判断直接基于刹车踏板实时状态） ---------- */
 static int16_t  filteredBrakeCmd    = 0;
 static uint8_t  brakeThrottleLock   = 0;
 static uint8_t  reverseActive       = 0;
-static uint8_t  prevBrakeConfirmed  = 0;
-static uint8_t  brakeOnCnt          = 0;
-static uint8_t  brakeOffCnt         = 0;
+static uint8_t  prevBrakePressed    = 0;       // 上一次刹车是否被踩下（用于释放边沿检测）
 static uint32_t lastLogTick         = 0;
 
 #define SIGN(x) (((x) > 0) ? 1 : (((x) < 0) ? -1 : 0))
@@ -177,38 +171,22 @@ int main(void)
                 enable = 1;
             }
 
-            // ---- 3. 获取原始油门/刹车值 ----
-            int16_t rawThrottle = input1[inIdx].cmd;   // 油门转把
-            int16_t rawBrake    = input2[inIdx].cmd;   // 刹车踏板
+            // ---- 3. 获取原始油门/刹车值（修正：input1 为刹车踏板，input2 为油门踏板） ----
+            int16_t rawBrake    = input1[inIdx].cmd;   // 刹车踏板
+            int16_t rawThrottle = input2[inIdx].cmd;   // 油门踏板
 
-            // ---- 4. 刹车信号防抖 ----
-            if (rawBrake > BRAKE_PEDAL_THRESHOLD) {
-                if (brakeOnCnt < BRAKE_DEBOUNCE_TICKS) {
-                    brakeOnCnt++;
-                }
-                if (brakeOnCnt >= BRAKE_DEBOUNCE_TICKS) {
-                    brakeConfirmed = 1;
-                    brakeOffCnt = 0;
-                }
-            } else {
-                if (brakeOffCnt < BRAKE_DEBOUNCE_TICKS) {
-                    brakeOffCnt++;
-                }
-                if (brakeOffCnt >= BRAKE_DEBOUNCE_TICKS) {
-                    brakeConfirmed = 0;
-                    brakeOnCnt = 0;
-                }
-            }
+            // 刹车踏板实时状态（无防抖，绝对实时）
+            uint8_t brakePressed = (rawBrake > BRAKE_PEDAL_THRESHOLD) ? 1 : 0;
 
             // ---- 5. 油门锁定（刹车释放下降沿） ----
-            if (prevBrakeConfirmed && !brakeConfirmed && rawThrottle > 10) {
+            if (prevBrakePressed && !brakePressed && rawThrottle > 10) {
                 brakeThrottleLock = 1;
             }
             if (brakeThrottleLock && rawThrottle < 10) {
                 brakeThrottleLock = 0;
             }
 
-            // ---- 6. 刹车时取消巡航 ----
+            // ---- 6. 刹车时取消巡航，松刹且车速合适且有一定油门时恢复巡航 ----
             if (rawBrake > 30) {
                 cruiseControl(0);
             } else {
@@ -218,7 +196,7 @@ int main(void)
             }
 
             // ---- 7. 双击检测（刹车踏板） ----
-            if (speedAvgAbs < 60 && rawBrake > BRAKE_PEDAL_THRESHOLD) {
+            if (speedAvgAbs < 60 && brakePressed) {
                 multipleTapDet(1, HAL_GetTick(), &MultipleTapBrake);
             } else {
                 multipleTapDet(0, HAL_GetTick(), &MultipleTapBrake);
@@ -229,14 +207,14 @@ int main(void)
                 // 进入条件
                 if (speedAvgAbs < 60 &&
                     MultipleTapBrake.b_multipleTap &&
-                    !brakeConfirmed &&
+                    !brakePressed &&
                     !brakeThrottleLock &&
                     rawThrottle > 10) {
                     reverseActive = 1;
                 }
             } else {
                 // 退出条件（主动松油门或踩刹车或锁定）
-                if (rawThrottle < 10 || brakeConfirmed || brakeThrottleLock) {
+                if (rawThrottle < 10 || brakePressed || brakeThrottleLock) {
                     reverseActive = 0;
                     MultipleTapBrake.b_multipleTap = 0;
                 }
@@ -273,10 +251,10 @@ int main(void)
                 }
             }
 
-            // ---- 12. 综合油门命令计算（刹车绝对优先） ----
+            // ---- 12. 综合油门命令计算（刹车绝对优先，使用实时刹车状态） ----
             int16_t throttleCommand = 0;
 
-            if (brakeConfirmed) {
+            if (brakePressed) {
                 // --- 制动优先（最高优先级）---
                 if (speedAvgAbs <= BRAKE_MIN_SPEED_RPM) {
                     throttleCommand = 0;
@@ -296,12 +274,8 @@ int main(void)
                 throttleCommand = -raw;
                 if (throttleCommand < -REVERSE_SPEED_LIMIT) throttleCommand = -REVERSE_SPEED_LIMIT;
             } else {
-                // 正常前进（含死区）
-                if (rawThrottle < 10) {
-                    throttleCommand = 0;
-                } else {
-                    throttleCommand = rawThrottle;
-                }
+                // 正常前进（死区由 readCommand 处理，此处不做额外过滤）
+                throttleCommand = rawThrottle;
             }
 
             // ---- 13. 写入输入通道 ----
@@ -328,7 +302,8 @@ int main(void)
             // ---- 16. 板载温度 & 电池电压 ----
             filtLowPass32(adc_buffer.temp, TEMP_FILT_COEF, &board_temp_adcFixdt);
             board_temp_adcFilt = (int16_t)(board_temp_adcFixdt >> 16);
-            board_temp_deg_c   = (TEMP_CAL_HIGH_DEG_C - TEMP_CAL_LOW_DEG_C) * (board_temp_adcFilt - TEMP_CAL_LOW_ADC) / 
+            board_temp_deg_c   = (TEMP_CAL_HIGH_DEG_C - TEMP_CAL_LOW_DEG_C) * 
+                                 (board_temp_adcFilt - TEMP_CAL_LOW_ADC) / 
                                  (TEMP_CAL_HIGH_ADC - TEMP_CAL_LOW_ADC) + TEMP_CAL_LOW_DEG_C;
 
             batVoltageCalib = batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC;
@@ -337,11 +312,10 @@ int main(void)
             right_dc_curr = -(rtU_Right.i_DCLink * 100) / A2BIT_CONV;
             dc_curr       = left_dc_curr + right_dc_curr;
 
-            // ---- 17. 调试日志：每秒输出一次（仅检查 gState） ----
+            // ---- 17. 调试日志：每秒输出一次 ----
             uint32_t now = HAL_GetTick();
             if (now - lastLogTick >= 1000U) {
                 if (huart3.gState == HAL_UART_STATE_READY) {
-                    // 填充日志所需的变量
                     Feedback.speedL_meas = (int16_t)rtY_Left.n_mot;
                     Feedback.speedR_meas = (int16_t)rtY_Right.n_mot;
                     Feedback.batVoltage  = (int16_t)batVoltageCalib;
@@ -351,7 +325,6 @@ int main(void)
 
                     int motionDir = (speedAvg > 0) ? 1 : ((speedAvg < 0) ? -1 : 0);
 
-                    // 接收数据 HEX 显示
                     char rx_hex_str[32] = "";
 #if defined(FEEDBACK_SERIAL_USART3)
                     uint32_t rx_len = 0;
@@ -368,7 +341,6 @@ int main(void)
                     }
 #endif
 
-                    // 错误码
                     char err_detail[24] = "";
                     if (g_ctrlErrDetail_Left != 0U || g_ctrlErrDetail_Right != 0U) {
                         snprintf(err_detail, sizeof(err_detail), " errL:%02X errR:%02X",
@@ -392,7 +364,7 @@ int main(void)
                         (int)Feedback.boardTemp,
                         (int)reverseActive,
                         (int)MultipleTapBrake.b_multipleTap,
-                        (motionDir),
+                        motionDir,
                         (int)rawBrake,
                         (int)brakeTarget,
                         (int)filteredBrakeCmd,
@@ -446,7 +418,7 @@ int main(void)
             }
 
             // ---- 19. 状态保存 ----
-            prevBrakeConfirmed = brakeConfirmed;
+            prevBrakePressed = brakePressed;   // 记录本次刹车状态，用于下一次循环的释放边沿检测
             inIdx_prev = inIdx;
             buzzerTimer_prev = buzzerTimer;
             main_loop_counter++;

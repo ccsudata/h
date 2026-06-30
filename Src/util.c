@@ -1076,10 +1076,10 @@ void readCommand(void) {
         inIdx = CONTROL_ADC;
       }
     #endif
-
+    
     readInputRaw();
-    HAL_Delay(1);
-    #if !defined(VARIANT_TRANSPOTTER)
+
+    #if !defined(VARIANT_HOVERBOARD) && !defined(VARIANT_TRANSPOTTER)
       calcInputCmd(&input1[inIdx], INPUT_MIN, INPUT_MAX);
       #if !defined(VARIANT_SKATEBOARD)
         calcInputCmd(&input2[inIdx], INPUT_MIN, INPUT_MAX);
@@ -1108,7 +1108,6 @@ void readCommand(void) {
         cruiseControl(button1);                                           // Cruise control activation/deactivation
     #endif
 }
-
 
 /*
  * Check for new data received on USART2 with DMA: refactored function from https://github.com/MaJerle/stm32-usart-uart-dma-rx-tx
