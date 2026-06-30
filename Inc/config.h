@@ -165,7 +165,7 @@
 
 /* 倒车切换条件 */
 #define LOW_SPEED_FOR_REVERSE       20   /* 允许切换倒车的最高转速 (rpm) */
-#define HARD_BRAKE_THRESHOLD       500   /* 双击检测必须超过的刹车力度 */
+#define HARD_BRAKE_THRESHOLD       800   /* 双击检测必须超过的刹车力度 */
 
 /* 踏板归零阈值 */
 #define PEDAL_ZERO_THRESHOLD        30   /* 油门小于此值视为完全松开 */
