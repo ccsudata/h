@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "stm32f1xx_hal.h"
 #include "defines.h"
 #include "setup.h"
@@ -11,7 +12,7 @@
 
 void SystemClock_Config(void);
 
-// 外部句柄 & 缓冲区
+/* ---------- 外部句柄 & 缓冲区 ---------- */
 extern TIM_HandleTypeDef htim_left;
 extern TIM_HandleTypeDef htim_right;
 extern ADC_HandleTypeDef hadc1;
@@ -21,7 +22,7 @@ extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart3;
 volatile uint8_t uart_buf[200];
 
-// 模型参数
+/* ---------- 模型参数 ---------- */
 extern P    rtP_Left;
 extern P    rtP_Right;
 extern ExtY rtY_Left;
@@ -29,13 +30,13 @@ extern ExtY rtY_Right;
 extern ExtU rtU_Left;
 extern ExtU rtU_Right;
 
-// 输入索引 & 结构
+/* ---------- 输入索引 & 结构 ---------- */
 extern uint8_t     inIdx;
 extern uint8_t     inIdx_prev;
 extern InputStruct input1[];
 extern InputStruct input2[];
 
-// 速度 & 超时标志
+/* ---------- 速度 & 超时标志 ---------- */
 extern int16_t speedAvg;
 extern int16_t speedAvgAbs;
 extern volatile uint32_t timeoutCntGen;
@@ -43,15 +44,15 @@ extern volatile uint8_t  timeoutFlgGen;
 extern uint8_t timeoutFlgADC;
 extern uint8_t timeoutFlgSerial;
 
-// 电机 PWM 命令
+/* ---------- 电机 PWM 命令 ---------- */
 extern volatile int pwml;
 extern volatile int pwmr;
 
-// 使能 & 电池电压
+/* ---------- 使能 & 电池电压 ---------- */
 extern uint8_t enable;
 extern int16_t batVoltage;
 
-// 全局变量
+/* ---------- 全局变量 ---------- */
 uint8_t backwardDrive;
 extern volatile uint32_t buzzerTimer;
 volatile uint32_t main_loop_counter;
@@ -63,7 +64,7 @@ int16_t dc_curr;
 int16_t cmdL;
 int16_t cmdR;
 
-// 仅用于调试日志字段填充，不再周期性发送
+/* ---------- 调试反馈结构体 ---------- */
 typedef struct {
     uint16_t start;
     int16_t  cmd1;
@@ -77,6 +78,7 @@ typedef struct {
 } SerialFeedback;
 static SerialFeedback Feedback;
 
+/* ---------- 本地变量 ---------- */
 static uint8_t sideboard_leds_R;
 static int16_t speed;
 static int16_t steer;
@@ -109,19 +111,19 @@ static uint16_t rate = RATE;
 #define REVERSE_SPEED_LIMIT         250
 #endif
 
-/* ---------- 通用阈值 ---------- */
-#define PEDAL_ZERO_THRESHOLD        30   // rawThrottle 低于此值视为油门已松开
+#define PEDAL_ZERO_THRESHOLD        30   /* 油门归零阈值 */
 
 /* ---------- 状态变量 ---------- */
 static int16_t  filteredBrakeCmd    = 0;
-static uint8_t  brakeThrottleLock   = 0;      // 前进模式刹车释放后油门锁定
-static uint8_t  reverseThrottleLock = 0;      // 倒车模式刹车释放后油门锁定
+static uint8_t  brakeThrottleLock   = 0;      /* 前进模式刹车释放后油门锁定 */
+static uint8_t  reverseThrottleLock = 0;      /* 倒车模式刹车释放后油门锁定 */
 static uint8_t  reverseActive       = 0;
 static uint8_t  prevBrakePressed    = 0;
 static uint32_t lastLogTick         = 0;
 
 #define SIGN(x) (((x) > 0) ? 1 : (((x) < 0) ? -1 : 0))
 
+/* ================================================================ */
 int main(void)
 {
     HAL_Init();
@@ -144,7 +146,7 @@ int main(void)
     MX_ADC2_Init();
     BLDC_Init();
 
-    HAL_GPIO_WritePin(OFF_PORT, OFF_PIN, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(OFF_PORT, OFF_PIN, GPIO_PIN_SET);   /* 激活锁存 */
     Input_Lim_Init();
     Input_Init();
 
@@ -162,11 +164,11 @@ int main(void)
     while (1) {
         if (buzzerTimer - buzzerTimer_prev > 16 * DELAY_IN_MAIN_LOOP) {
 
-            // ---- 1. 读取指令 & 计算平均速度 ----
+            /* ---- 1. 读取指令 & 计算平均速度 ---- */
             readCommand();
             calcAvgSpeed();
 
-            // ---- 2. 电机安全使能 ----
+            /* ---- 2. 电机安全使能 ---- */
             if (enable == 0 && !rtY_Left.z_errCode && !rtY_Right.z_errCode &&
                 ABS(input1[inIdx].cmd) < 50 && ABS(input2[inIdx].cmd) < 50) {
                 beepShort(6);
@@ -175,14 +177,13 @@ int main(void)
                 enable = 1;
             }
 
-            // ---- 3. 获取原始油门/刹车值 ----
-            int16_t rawBrake    = input1[inIdx].cmd;   // 刹车踏板
-            int16_t rawThrottle = input2[inIdx].cmd;   // 油门踏板
+            /* ---- 3. 获取原始油门/刹车值 ---- */
+            int16_t rawBrake    = input1[inIdx].cmd;   /* 刹车踏板 */
+            int16_t rawThrottle = input2[inIdx].cmd;   /* 油门踏板 */
 
-            // 刹车踏板实时状态
             uint8_t brakePressed = (rawBrake > BRAKE_PEDAL_THRESHOLD) ? 1 : 0;
 
-            // ---- 5. 前进模式油门锁定（刹车释放下降沿） ----
+            /* ---- 5. 前进模式油门锁定（刹车释放下降沿） ---- */
             if (!reverseActive && prevBrakePressed && !brakePressed && rawThrottle > PEDAL_ZERO_THRESHOLD) {
                 brakeThrottleLock = 1;
             }
@@ -190,7 +191,7 @@ int main(void)
                 brakeThrottleLock = 0;
             }
 
-            // ---- 5b. 倒车模式油门锁定（刹车释放下降沿） ----
+            /* ---- 5b. 倒车模式油门锁定（刹车释放下降沿） ---- */
             if (reverseActive && prevBrakePressed && !brakePressed && rawThrottle > PEDAL_ZERO_THRESHOLD) {
                 reverseThrottleLock = 1;
             }
@@ -198,7 +199,7 @@ int main(void)
                 reverseThrottleLock = 0;
             }
 
-            // ---- 6. 巡航控制 ----
+            /* ---- 6. 巡航控制 ---- */
             if (rawBrake > BRAKE_PEDAL_THRESHOLD) {
                 cruiseControl(0);
             } else {
@@ -207,33 +208,35 @@ int main(void)
                 }
             }
 
-            // ---- 7. 双击检测 ----
+            /* ---- 7. 双击检测（始终运行，传入刹车值） ---- */
             if (speedAvgAbs < 60) {
                 multipleTapDet(rawBrake, HAL_GetTick(), &MultipleTapBrake);
             } else {
                 multipleTapDet(0, HAL_GetTick(), &MultipleTapBrake);
             }
 
-            // ---- 8. 倒车模式状态管理 ----
+            /* ---- 8. 倒车模式状态管理 ---- */
             if (!reverseActive) {
-                // 进入条件
+                /* 进入条件：双击、松刹、未锁定、油门有输入 */
                 if (speedAvgAbs < 60 &&
                     MultipleTapBrake.b_multipleTap &&
                     !brakePressed &&
                     !brakeThrottleLock &&
                     rawThrottle > PEDAL_ZERO_THRESHOLD) {
                     reverseActive = 1;
+                    /* 进入倒车后重置双击状态，以便后续双击用来退出 */
+                    memset(&MultipleTapBrake, 0, sizeof(MultipleTapBrake));
                 }
             } else {
-                // 退出条件：仅主动松油门或前进锁定（倒车锁定不退出）
-                if (rawThrottle < PEDAL_ZERO_THRESHOLD || brakeThrottleLock) {
+                /* 倒车中：检测到新的双击 → 退出倒车 */
+                if (MultipleTapBrake.b_multipleTap) {
                     reverseActive = 0;
-                    MultipleTapBrake.b_multipleTap = 0;
-                    reverseThrottleLock = 0;  // 退出倒车时也清倒车锁定
+                    reverseThrottleLock = 0;
+                    memset(&MultipleTapBrake, 0, sizeof(MultipleTapBrake));
                 }
             }
 
-            // ---- 9. 刹车力计算 ----
+            /* ---- 9. 计算刹车目标力 ---- */
             int32_t speedFactor;
             if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
                 speedFactor = 0;
@@ -247,7 +250,7 @@ int main(void)
             if (brakeTarget < 0) brakeTarget = 0;
             if (brakeTarget > BRAKE_MAX_LIMIT) brakeTarget = BRAKE_MAX_LIMIT;
 
-            // ---- 10. 刹车力斜坡逼近 ----
+            /* ---- 10. 刹车力斜坡逼近 ---- */
             if (filteredBrakeCmd < brakeTarget) {
                 filteredBrakeCmd += BRAKE_RAMP_STEP;
                 if (filteredBrakeCmd > brakeTarget) filteredBrakeCmd = brakeTarget;
@@ -256,7 +259,7 @@ int main(void)
                 if (filteredBrakeCmd < brakeTarget) filteredBrakeCmd = brakeTarget;
             }
 
-            // ---- 11. 前进锁定释放刹车力 ----
+            /* ---- 11. 前进锁定缓慢释放刹车力 ---- */
             if (brakeThrottleLock) {
                 if (filteredBrakeCmd > 0) {
                     filteredBrakeCmd -= BRAKE_RAMP_STEP;
@@ -264,11 +267,11 @@ int main(void)
                 }
             }
 
-            // ---- 12. 综合油门命令计算 ----
+            /* ---- 12. 综合油门命令计算（刹车绝对优先） ---- */
             int16_t throttleCommand = 0;
 
             if (brakePressed) {
-                // 制动优先
+                /* 制动优先 */
                 if (speedAvgAbs <= BRAKE_MIN_SPEED_RPM) {
                     throttleCommand = 0;
                 } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
@@ -278,29 +281,29 @@ int main(void)
                     throttleCommand = -SIGN(speedAvg) * filteredBrakeCmd;
                 }
             } else if (brakeThrottleLock) {
-                // 前进锁定：强制0
+                /* 前进锁定：强制 0 */
                 throttleCommand = 0;
             } else if (reverseActive && reverseThrottleLock) {
-                // 倒车锁定（刹车释放后等待油门归零）
+                /* 倒车锁定：强制 0 */
                 throttleCommand = 0;
             } else if (reverseActive) {
-                // 正常倒车
+                /* 正常倒车（限速） */
                 int32_t raw = rawThrottle;
                 if (raw > REVERSE_SPEED_LIMIT) raw = REVERSE_SPEED_LIMIT;
                 throttleCommand = -raw;
                 if (throttleCommand < -REVERSE_SPEED_LIMIT) throttleCommand = -REVERSE_SPEED_LIMIT;
             } else {
-                // 正常前进
+                /* 正常前进 */
                 throttleCommand = rawThrottle;
             }
 
-            // ---- 13. 写入输入通道 ----
+            /* ---- 13. 写入输入通道 ---- */
             if (inIdx == CONTROL_ADC) {
-                input1[inIdx].cmd = 0;   // 转向置零
+                input1[inIdx].cmd = 0;   /* 转向置零 */
             }
             input2[inIdx].cmd = throttleCommand;
 
-            // ---- 14. 命令平滑 & 混控 ----
+            /* ---- 14. 命令平滑 & 混控 ---- */
             rateLimiter16(input1[inIdx].cmd, rate, &steerRateFixdt);
             rateLimiter16(input2[inIdx].cmd, rate, &speedRateFixdt);
             filtLowPass32(steerRateFixdt >> 4, FILTER, &steerFixdt);
@@ -312,10 +315,10 @@ int main(void)
             pwmr = -cmdR;
             pwml =  cmdL;
 
-            // ---- 15. 侧边 LED ----
+            /* ---- 15. 侧边 LED ---- */
             sideboardLeds(&sideboard_leds_R);
 
-            // ---- 16. 板载温度 & 电池电压 ----
+            /* ---- 16. 板载温度 & 电池电压 ---- */
             filtLowPass32(adc_buffer.temp, TEMP_FILT_COEF, &board_temp_adcFixdt);
             board_temp_adcFilt = (int16_t)(board_temp_adcFixdt >> 16);
             board_temp_deg_c   = (TEMP_CAL_HIGH_DEG_C - TEMP_CAL_LOW_DEG_C) * 
@@ -328,7 +331,7 @@ int main(void)
             right_dc_curr = -(rtU_Right.i_DCLink * 100) / A2BIT_CONV;
             dc_curr       = left_dc_curr + right_dc_curr;
 
-            // ---- 17. 调试日志 ----
+            /* ---- 17. 调试日志：每秒输出一次 ---- */
             uint32_t now = HAL_GetTick();
             if (now - lastLogTick >= 1000U) {
                 if (huart3.gState == HAL_UART_STATE_READY) {
@@ -396,7 +399,7 @@ int main(void)
                 }
             }
 
-            // ---- 18. 错误/报警/电源管理 ----
+            /* ---- 18. 错误/报警/电源管理 ---- */
             poweroffPressCheck();
 
             if (TEMP_POWEROFF_ENABLE && board_temp_deg_c >= TEMP_POWEROFF && speedAvgAbs < 20) {
@@ -434,7 +437,7 @@ int main(void)
                 poweroff();
             }
 
-            // ---- 19. 状态保存 ----
+            /* ---- 19. 状态保存 ---- */
             prevBrakePressed = brakePressed;
             inIdx_prev = inIdx;
             buzzerTimer_prev = buzzerTimer;
@@ -443,6 +446,7 @@ int main(void)
     }
 }
 
+/* ================================================================ */
 void SystemClock_Config(void)
 {
     RCC_OscInitTypeDef RCC_OscInitStruct;
