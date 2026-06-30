@@ -1,3 +1,14 @@
+/*
+ * 修复内容：
+ * 1. 油门/刹车映射正确：input1 = 刹车, input2 = 油门。
+ * 2. 双击检测传入 rawBrake 值。
+ * 3. 倒车中踩刹车仅制动，不退出倒车模式，不重置双击标志。
+ * 4. 退出倒车的唯一条件：油门归零或触发刹车-油门锁定。
+ * 5. 所有判断阈值统一为 30，适应 ADC 中位可能未完美校准的情况。
+ * 6. 需要修改 config.h 中的 PRI_INPUT1/2 宏使中位匹配实际 ADC 值，
+ *    否则静态 rawThrottle 可能小幅漂移（本代码阈值可容忍 ±30 以内漂移）。
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "stm32f1xx_hal.h"
@@ -109,11 +120,14 @@ static uint16_t rate = RATE;
 #define REVERSE_SPEED_LIMIT         250
 #endif
 
+/* ---------- 通用阈值：用于判断踏板是否被按下/归零 ---------- */
+#define PEDAL_ZERO_THRESHOLD        30   // rawThrottle 低于此值视为油门已松开
+
 /* ---------- 刹车/倒车/锁定状态 ---------- */
 static int16_t  filteredBrakeCmd    = 0;
 static uint8_t  brakeThrottleLock   = 0;
 static uint8_t  reverseActive       = 0;
-static uint8_t  prevBrakePressed    = 0;       // 上一次刹车是否被踩下（用于释放边沿检测）
+static uint8_t  prevBrakePressed    = 0;
 static uint32_t lastLogTick         = 0;
 
 #define SIGN(x) (((x) > 0) ? 1 : (((x) < 0) ? -1 : 0))
@@ -179,18 +193,18 @@ int main(void)
             uint8_t brakePressed = (rawBrake > BRAKE_PEDAL_THRESHOLD) ? 1 : 0;
 
             // ---- 5. 油门锁定（刹车释放下降沿） ----
-            if (prevBrakePressed && !brakePressed && rawThrottle > 10) {
+            if (prevBrakePressed && !brakePressed && rawThrottle > PEDAL_ZERO_THRESHOLD) {
                 brakeThrottleLock = 1;
             }
-            if (brakeThrottleLock && rawThrottle < 25) {
+            if (brakeThrottleLock && rawThrottle < PEDAL_ZERO_THRESHOLD) {
                 brakeThrottleLock = 0;
             }
 
             // ---- 6. 刹车时取消巡航，松刹且车速合适且有一定油门时恢复巡航 ----
-            if (rawBrake > 30) {
+            if (rawBrake > BRAKE_PEDAL_THRESHOLD) {
                 cruiseControl(0);
             } else {
-                if (inIdx == CONTROL_ADC && speedAvgAbs < 60 && rawThrottle > 30) {
+                if (inIdx == CONTROL_ADC && speedAvgAbs < 60 && rawThrottle > PEDAL_ZERO_THRESHOLD) {
                     cruiseControl((uint8_t)rtP_Left.b_cruiseCtrlEna);
                 }
             }
@@ -205,19 +219,19 @@ int main(void)
 
             // ---- 8. 倒车模式状态管理 ----
             if (!reverseActive) {
-                // 进入条件
+                // 进入条件：双击后松刹、未锁定、油门有输入
                 if (speedAvgAbs < 60 &&
                     MultipleTapBrake.b_multipleTap &&
                     !brakePressed &&
                     !brakeThrottleLock &&
-                    rawThrottle > 10) {
+                    rawThrottle > PEDAL_ZERO_THRESHOLD) {
                     reverseActive = 1;
                 }
             } else {
-                // 退出条件（主动松油门或踩刹车或锁定）
-                if (rawThrottle < 10 || brakePressed || brakeThrottleLock) {
+                // 退出条件：仅主动松油门或触发锁定，踩刹车不退出倒车
+                if (rawThrottle < PEDAL_ZERO_THRESHOLD || brakeThrottleLock) {
                     reverseActive = 0;
-                    MultipleTapBrake.b_multipleTap = 0;
+                    MultipleTapBrake.b_multipleTap = 0;   // 真正退出时清零双击标志
                 }
             }
 
@@ -252,7 +266,7 @@ int main(void)
                 }
             }
 
-            // ---- 12. 综合油门命令计算（刹车绝对优先，使用实时刹车状态） ----
+            // ---- 12. 综合油门命令计算（刹车绝对优先） ----
             int16_t throttleCommand = 0;
 
             if (brakePressed) {
@@ -420,7 +434,7 @@ int main(void)
             }
 
             // ---- 19. 状态保存 ----
-            prevBrakePressed = brakePressed;   // 记录本次刹车状态，用于下一次循环的释放边沿检测
+            prevBrakePressed = brakePressed;
             inIdx_prev = inIdx;
             buzzerTimer_prev = buzzerTimer;
             main_loop_counter++;
