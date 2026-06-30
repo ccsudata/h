@@ -204,14 +204,14 @@ int main(void)
                 }
             }
 
-            /* 双击检测：仅低速且大力刹车时有效 */
-            if (speedAvgAbs < LOW_SPEED_FOR_REVERSE && rawBrake > HARD_BRAKE_THRESHOLD) {
+            /* 双击检测：必须低速、大力刹车、且油门完全松开 */
+            if (speedAvgAbs < LOW_SPEED_FOR_REVERSE && rawBrake > HARD_BRAKE_THRESHOLD && rawThrottle < PEDAL_ZERO_THRESHOLD) {
                 multipleTapDet(rawBrake, HAL_GetTick(), &MultipleTapBrake);
             } else {
                 multipleTapDet(0, HAL_GetTick(), &MultipleTapBrake);
             }
 
-            /* 倒车切换：必须在低速且油门无输入时才能切换 */
+            /* 倒车切换：必须低速、油门无输入、且双击标志有效 */
             if (MultipleTapBrake.b_multipleTap && 
                 speedAvgAbs < LOW_SPEED_FOR_REVERSE && 
                 rawThrottle < PEDAL_ZERO_THRESHOLD) {
