@@ -109,12 +109,13 @@ static uint16_t rate = RATE;
 #define REVERSE_SPEED_LIMIT         250
 #endif
 
-/* ---------- 通用阈值：用于判断踏板是否被按下/归零 ---------- */
+/* ---------- 通用阈值 ---------- */
 #define PEDAL_ZERO_THRESHOLD        30   // rawThrottle 低于此值视为油门已松开
 
-/* ---------- 刹车/倒车/锁定状态 ---------- */
+/* ---------- 状态变量 ---------- */
 static int16_t  filteredBrakeCmd    = 0;
-static uint8_t  brakeThrottleLock   = 0;
+static uint8_t  brakeThrottleLock   = 0;      // 前进模式刹车释放后油门锁定
+static uint8_t  reverseThrottleLock = 0;      // 倒车模式刹车释放后油门锁定
 static uint8_t  reverseActive       = 0;
 static uint8_t  prevBrakePressed    = 0;
 static uint32_t lastLogTick         = 0;
@@ -174,14 +175,14 @@ int main(void)
                 enable = 1;
             }
 
-            // ---- 3. 获取原始油门/刹车值（input1 为刹车踏板，input2 为油门踏板） ----
+            // ---- 3. 获取原始油门/刹车值 ----
             int16_t rawBrake    = input1[inIdx].cmd;   // 刹车踏板
             int16_t rawThrottle = input2[inIdx].cmd;   // 油门踏板
 
-            // 刹车踏板实时状态（无防抖，绝对实时）
+            // 刹车踏板实时状态
             uint8_t brakePressed = (rawBrake > BRAKE_PEDAL_THRESHOLD) ? 1 : 0;
 
-            // ---- 5. 油门锁定（刹车释放下降沿），倒车模式下不锁定 ----
+            // ---- 5. 前进模式油门锁定（刹车释放下降沿） ----
             if (!reverseActive && prevBrakePressed && !brakePressed && rawThrottle > PEDAL_ZERO_THRESHOLD) {
                 brakeThrottleLock = 1;
             }
@@ -189,7 +190,15 @@ int main(void)
                 brakeThrottleLock = 0;
             }
 
-            // ---- 6. 刹车时取消巡航，松刹且车速合适且有一定油门时恢复巡航 ----
+            // ---- 5b. 倒车模式油门锁定（刹车释放下降沿） ----
+            if (reverseActive && prevBrakePressed && !brakePressed && rawThrottle > PEDAL_ZERO_THRESHOLD) {
+                reverseThrottleLock = 1;
+            }
+            if (reverseThrottleLock && rawThrottle < PEDAL_ZERO_THRESHOLD) {
+                reverseThrottleLock = 0;
+            }
+
+            // ---- 6. 巡航控制 ----
             if (rawBrake > BRAKE_PEDAL_THRESHOLD) {
                 cruiseControl(0);
             } else {
@@ -198,8 +207,7 @@ int main(void)
                 }
             }
 
-            // ---- 7. 双击检测（刹车踏板） ----
-            // 传入刹车原始值，让 multipleTapDet 内部判断阈值
+            // ---- 7. 双击检测 ----
             if (speedAvgAbs < 60) {
                 multipleTapDet(rawBrake, HAL_GetTick(), &MultipleTapBrake);
             } else {
@@ -208,7 +216,7 @@ int main(void)
 
             // ---- 8. 倒车模式状态管理 ----
             if (!reverseActive) {
-                // 进入条件：双击后松刹、未锁定、油门有输入
+                // 进入条件
                 if (speedAvgAbs < 60 &&
                     MultipleTapBrake.b_multipleTap &&
                     !brakePressed &&
@@ -217,14 +225,15 @@ int main(void)
                     reverseActive = 1;
                 }
             } else {
-                // 退出条件：仅主动松油门或触发锁定，踩刹车不退出倒车
+                // 退出条件：仅主动松油门或前进锁定（倒车锁定不退出）
                 if (rawThrottle < PEDAL_ZERO_THRESHOLD || brakeThrottleLock) {
                     reverseActive = 0;
-                    MultipleTapBrake.b_multipleTap = 0;   // 真正退出时清零双击标志
+                    MultipleTapBrake.b_multipleTap = 0;
+                    reverseThrottleLock = 0;  // 退出倒车时也清倒车锁定
                 }
             }
 
-            // ---- 9. 计算刹车目标力 ----
+            // ---- 9. 刹车力计算 ----
             int32_t speedFactor;
             if (speedAvgAbs < BRAKE_MIN_SPEED_RPM) {
                 speedFactor = 0;
@@ -247,7 +256,7 @@ int main(void)
                 if (filteredBrakeCmd < brakeTarget) filteredBrakeCmd = brakeTarget;
             }
 
-            // ---- 11. 油门锁定时缓慢释放刹车力 ----
+            // ---- 11. 前进锁定释放刹车力 ----
             if (brakeThrottleLock) {
                 if (filteredBrakeCmd > 0) {
                     filteredBrakeCmd -= BRAKE_RAMP_STEP;
@@ -255,11 +264,11 @@ int main(void)
                 }
             }
 
-            // ---- 12. 综合油门命令计算（刹车绝对优先） ----
+            // ---- 12. 综合油门命令计算 ----
             int16_t throttleCommand = 0;
 
             if (brakePressed) {
-                // --- 制动优先（最高优先级）---
+                // 制动优先
                 if (speedAvgAbs <= BRAKE_MIN_SPEED_RPM) {
                     throttleCommand = 0;
                 } else if (speedAvgAbs < BRAKE_SMOOTH_ZONE_RPM) {
@@ -269,22 +278,25 @@ int main(void)
                     throttleCommand = -SIGN(speedAvg) * filteredBrakeCmd;
                 }
             } else if (brakeThrottleLock) {
-                // 油门锁定：强制零扭矩
+                // 前进锁定：强制0
+                throttleCommand = 0;
+            } else if (reverseActive && reverseThrottleLock) {
+                // 倒车锁定（刹车释放后等待油门归零）
                 throttleCommand = 0;
             } else if (reverseActive) {
-                // 倒车模式：限速向后
+                // 正常倒车
                 int32_t raw = rawThrottle;
                 if (raw > REVERSE_SPEED_LIMIT) raw = REVERSE_SPEED_LIMIT;
                 throttleCommand = -raw;
                 if (throttleCommand < -REVERSE_SPEED_LIMIT) throttleCommand = -REVERSE_SPEED_LIMIT;
             } else {
-                // 正常前进（死区由 readCommand 处理，此处不做额外过滤）
+                // 正常前进
                 throttleCommand = rawThrottle;
             }
 
             // ---- 13. 写入输入通道 ----
             if (inIdx == CONTROL_ADC) {
-                input1[inIdx].cmd = 0;   // 转向在 ADC 模式下强制置零
+                input1[inIdx].cmd = 0;   // 转向置零
             }
             input2[inIdx].cmd = throttleCommand;
 
@@ -316,7 +328,7 @@ int main(void)
             right_dc_curr = -(rtU_Right.i_DCLink * 100) / A2BIT_CONV;
             dc_curr       = left_dc_curr + right_dc_curr;
 
-            // ---- 17. 调试日志：每秒输出一次 ----
+            // ---- 17. 调试日志 ----
             uint32_t now = HAL_GetTick();
             if (now - lastLogTick >= 1000U) {
                 if (huart3.gState == HAL_UART_STATE_READY) {
@@ -358,8 +370,8 @@ int main(void)
                         (unsigned long)now,
                         (int)Feedback.speedL_meas,
                         (int)Feedback.speedR_meas,
-                        (int)adc_buffer.l_tx2,    // 刹车踏板原始值
-                        (int)adc_buffer.l_rx2,    // 油门踏板原始值
+                        (int)adc_buffer.l_tx2,
+                        (int)adc_buffer.l_rx2,
                         (int)speed,
                         (int)steer,
                         (int)cmdL,
