@@ -328,8 +328,7 @@ int main(void)
             // ---- 16. 板载温度 & 电池电压 ----
             filtLowPass32(adc_buffer.temp, TEMP_FILT_COEF, &board_temp_adcFixdt);
             board_temp_adcFilt = (int16_t)(board_temp_adcFixdt >> 16);
-            board_temp_deg_c   = (TEMP_CAL_HIGH_DEG_C - TEMP_CAL_LOW_DEG_C) * 
-                                 (board_temp_adcFilt - TEMP_CAL_LOW_ADC) / 
+            board_temp_deg_c   = (TEMP_CAL_HIGH_DEG_C - TEMP_CAL_LOW_DEG_C) * (board_temp_adcFilt - TEMP_CAL_LOW_ADC) / 
                                  (TEMP_CAL_HIGH_ADC - TEMP_CAL_LOW_ADC) + TEMP_CAL_LOW_DEG_C;
 
             batVoltageCalib = batVoltage * BAT_CALIB_REAL_VOLTAGE / BAT_CALIB_ADC;
@@ -393,7 +392,7 @@ int main(void)
                         (int)Feedback.boardTemp,
                         (int)reverseActive,
                         (int)MultipleTapBrake.b_multipleTap,
-                        motionDir,
+                        (motionDir),
                         (int)rawBrake,
                         (int)brakeTarget,
                         (int)filteredBrakeCmd,
