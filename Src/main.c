@@ -182,7 +182,7 @@ int main(void)
             if (prevBrakePressed && !brakePressed && rawThrottle > 10) {
                 brakeThrottleLock = 1;
             }
-            if (brakeThrottleLock && rawThrottle < 10) {
+            if (brakeThrottleLock && rawThrottle < 30) {
                 brakeThrottleLock = 0;
             }
 
@@ -350,7 +350,7 @@ int main(void)
 
                     static char buf[256];
                     int written = snprintf(buf, sizeof(buf),
-                        "%lums L:%d R:%d TX2:%d RX2:%d fs:%d st:%d cL:%d cR:%d V:%d T:%d rev:%d tap:%d dir:%d br:%d bt:%d fbc:%d thr:%d%s [%s]\r\n",
+                        "%lums L:%d R:%d TX2:%d RX2:%d fs:%d st:%d cL:%d cR:%d V:%d T:%d rev:%d tap:%d dir:%d br:%d bt:%d fbc:%d thr:%d rawT:%d%s [%s]\r\n",
                         (unsigned long)now,
                         (int)Feedback.speedL_meas,
                         (int)Feedback.speedR_meas,
@@ -369,6 +369,7 @@ int main(void)
                         (int)brakeTarget,
                         (int)filteredBrakeCmd,
                         (int)throttleCommand,
+                        (int)rawThrottle,
                         err_detail,
                         rx_hex_str);
 
