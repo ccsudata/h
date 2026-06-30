@@ -1,14 +1,3 @@
-/*
- * 修复内容：
- * 1. 油门/刹车映射正确：input1 = 刹车, input2 = 油门。
- * 2. 双击检测传入 rawBrake 值。
- * 3. 倒车中踩刹车仅制动，不退出倒车模式，不重置双击标志。
- * 4. 退出倒车的唯一条件：油门归零或触发刹车-油门锁定。
- * 5. 所有判断阈值统一为 30，适应 ADC 中位可能未完美校准的情况。
- * 6. 需要修改 config.h 中的 PRI_INPUT1/2 宏使中位匹配实际 ADC 值，
- *    否则静态 rawThrottle 可能小幅漂移（本代码阈值可容忍 ±30 以内漂移）。
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "stm32f1xx_hal.h"
@@ -192,8 +181,8 @@ int main(void)
             // 刹车踏板实时状态（无防抖，绝对实时）
             uint8_t brakePressed = (rawBrake > BRAKE_PEDAL_THRESHOLD) ? 1 : 0;
 
-            // ---- 5. 油门锁定（刹车释放下降沿） ----
-            if (prevBrakePressed && !brakePressed && rawThrottle > PEDAL_ZERO_THRESHOLD) {
+            // ---- 5. 油门锁定（刹车释放下降沿），倒车模式下不锁定 ----
+            if (!reverseActive && prevBrakePressed && !brakePressed && rawThrottle > PEDAL_ZERO_THRESHOLD) {
                 brakeThrottleLock = 1;
             }
             if (brakeThrottleLock && rawThrottle < PEDAL_ZERO_THRESHOLD) {
