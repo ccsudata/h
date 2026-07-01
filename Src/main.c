@@ -204,14 +204,11 @@ int main(void)
                 }
             }
 
-            /* 双击检测：必须低速、大力刹车、且油门完全松开 */
-            if (speedAvgAbs < LOW_SPEED_FOR_REVERSE && rawBrake > HARD_BRAKE_THRESHOLD && rawThrottle < PEDAL_ZERO_THRESHOLD) {
-                multipleTapDet(rawBrake, HAL_GetTick(), &MultipleTapBrake);
-            } else {
-                multipleTapDet(0, HAL_GetTick(), &MultipleTapBrake);
-            }
+            /* ---------- 双击检测修复 ---------- */
+            /* 始终使用真实的刹车值调用 multipleTapDet，保证双击只由刹车踏板自身动作触发 */
+            multipleTapDet(rawBrake, HAL_GetTick(), &MultipleTapBrake);
 
-            /* 倒车切换：必须低速、油门无输入、且双击标志有效 */
+            /* 倒车切换条件：低速、大力刹车（隐含在双击条件里）、油门松开 */
             if (MultipleTapBrake.b_multipleTap && 
                 speedAvgAbs < LOW_SPEED_FOR_REVERSE && 
                 rawThrottle < PEDAL_ZERO_THRESHOLD) {
@@ -219,6 +216,12 @@ int main(void)
                 reverseThrottleLock = 0;
                 memset(&MultipleTapBrake, 0, sizeof(MultipleTapBrake));
             }
+
+            /* 若条件不满足（车速过高或油门未松），则彻底清除双击状态，防止残留 */
+            if (!(speedAvgAbs < LOW_SPEED_FOR_REVERSE && rawThrottle < PEDAL_ZERO_THRESHOLD)) {
+                memset(&MultipleTapBrake, 0, sizeof(MultipleTapBrake));
+            }
+            /* --------------------------------- */
 
             /* 计算刹车目标力 */
             int32_t speedFactor;
