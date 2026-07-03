@@ -342,7 +342,7 @@ static void Vehicle_CalcBrakeAndThrottle(void)
     } else if (reverseActive && reverseThrottleLock) {
         throttleCommand = 0;
     } else if (reverseActive) {
-        int32_t raw = rawThrottle;
+        int32_t raw = rawThrottle / REVERSE_SPEED_RATIO;
         if (raw > REVERSE_SPEED_LIMIT) raw = REVERSE_SPEED_LIMIT;
         throttleCommand = -raw;
         if (throttleCommand < -REVERSE_SPEED_LIMIT) throttleCommand = -REVERSE_SPEED_LIMIT;

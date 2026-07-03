@@ -153,7 +153,8 @@
 
 #define INPUTS_NR               2
 
-/* 倒车速度限制 */
+/* 倒车速度衰减比例与硬上限 */
+#define REVERSE_SPEED_RATIO     5
 #define REVERSE_SPEED_LIMIT     200
 
 /* 刹车力度与平滑 */

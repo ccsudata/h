@@ -1453,7 +1453,7 @@ LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
                 0x08000000                g_pfnVectors
                 0x0800015c                        . = ALIGN (0x4)
 
-.text           0x0800015c     0x876c
+.text           0x0800015c     0x877c
                 0x0800015c                        . = ALIGN (0x4)
  *(.text)
  .text          0x0800015c       0x88 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
@@ -1917,304 +1917,304 @@ LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
                 0x08005ae0                multipleTapDet
  *fill*         0x08005b56        0x2 
  .text.Vehicle_CalcBrakeAndThrottle
-                0x08005b58      0x1d0 /workspaces/h/build/main.o
+                0x08005b58      0x1e0 /workspaces/h/build/main.o
  .text.Vehicle_MaintainState
-                0x08005d28       0x40 /workspaces/h/build/main.o
+                0x08005d38       0x40 /workspaces/h/build/main.o
  .text.Vehicle_UpdateSensors
-                0x08005d68       0x58 /workspaces/h/build/main.o
+                0x08005d78       0x58 /workspaces/h/build/main.o
  .text.Vehicle_SafetyEnableCheck
-                0x08005dc0       0x8c /workspaces/h/build/main.o
+                0x08005dd0       0x8c /workspaces/h/build/main.o
  .text.Vehicle_ManageLocksAndCruise
-                0x08005e4c       0xd0 /workspaces/h/build/main.o
+                0x08005e5c       0xd0 /workspaces/h/build/main.o
  .text.Vehicle_ProcessReverseLogic
-                0x08005f1c       0x80 /workspaces/h/build/main.o
+                0x08005f2c       0x80 /workspaces/h/build/main.o
  .text.Vehicle_OutputMixingFilter
-                0x08005f9c      0x108 /workspaces/h/build/main.o
+                0x08005fac      0x108 /workspaces/h/build/main.o
  .text.Vehicle_ServiceTelemetry
-                0x080060a4      0x2dc /workspaces/h/build/main.o
+                0x080060b4      0x2dc /workspaces/h/build/main.o
  .text.Vehicle_SafetyAndPowerManager
-                0x08006380      0x128 /workspaces/h/build/main.o
+                0x08006390      0x128 /workspaces/h/build/main.o
  .text.SystemClock_Config
-                0x080064a8       0x74 /workspaces/h/build/main.o
-                0x080064a8                SystemClock_Config
- .text.main     0x0800651c      0x144 /workspaces/h/build/main.o
-                0x0800651c                main
+                0x080064b8       0x74 /workspaces/h/build/main.o
+                0x080064b8                SystemClock_Config
+ .text.main     0x0800652c      0x144 /workspaces/h/build/main.o
+                0x0800652c                main
  .text.DMA1_Channel1_IRQHandler
-                0x08006660      0x504 /workspaces/h/build/bldc.o
-                0x08006660                DMA1_Channel1_IRQHandler
+                0x08006670      0x504 /workspaces/h/build/bldc.o
+                0x08006670                DMA1_Channel1_IRQHandler
  .text.EE_VerifyPageFullyErased
-                0x08006b64       0x24 /workspaces/h/build/eeprom.o
+                0x08006b74       0x24 /workspaces/h/build/eeprom.o
  .text.EE_FindValidPage
-                0x08006b88       0x50 /workspaces/h/build/eeprom.o
+                0x08006b98       0x50 /workspaces/h/build/eeprom.o
  .text.EE_VerifyPageFullWriteVariable
-                0x08006bd8       0x54 /workspaces/h/build/eeprom.o
+                0x08006be8       0x54 /workspaces/h/build/eeprom.o
  .text.EE_Format
-                0x08006c2c       0x60 /workspaces/h/build/eeprom.o
+                0x08006c3c       0x60 /workspaces/h/build/eeprom.o
  .text.EE_ReadVariable
-                0x08006c8c       0x48 /workspaces/h/build/eeprom.o
-                0x08006c8c                EE_ReadVariable
- .text.EE_Init  0x08006cd4      0x250 /workspaces/h/build/eeprom.o
-                0x08006cd4                EE_Init
+                0x08006c9c       0x48 /workspaces/h/build/eeprom.o
+                0x08006c9c                EE_ReadVariable
+ .text.EE_Init  0x08006ce4      0x250 /workspaces/h/build/eeprom.o
+                0x08006ce4                EE_Init
  .text.EE_PageTransfer
-                0x08006f24       0xc4 /workspaces/h/build/eeprom.o
+                0x08006f34       0xc4 /workspaces/h/build/eeprom.o
  .text.EE_WriteVariable
-                0x08006fe8       0x1a /workspaces/h/build/eeprom.o
-                0x08006fe8                EE_WriteVariable
+                0x08006ff8       0x1a /workspaces/h/build/eeprom.o
+                0x08006ff8                EE_WriteVariable
  .text.NMI_Handler
-                0x08007002        0x2 /workspaces/h/build/stm32f1xx_it.o
-                0x08007002                NMI_Handler
+                0x08007012        0x2 /workspaces/h/build/stm32f1xx_it.o
+                0x08007012                NMI_Handler
  .text.HardFault_Handler
-                0x08007004        0x2 /workspaces/h/build/stm32f1xx_it.o
-                0x08007004                HardFault_Handler
+                0x08007014        0x2 /workspaces/h/build/stm32f1xx_it.o
+                0x08007014                HardFault_Handler
  .text.MemManage_Handler
-                0x08007006        0x2 /workspaces/h/build/stm32f1xx_it.o
-                0x08007006                MemManage_Handler
+                0x08007016        0x2 /workspaces/h/build/stm32f1xx_it.o
+                0x08007016                MemManage_Handler
  .text.BusFault_Handler
-                0x08007008        0x2 /workspaces/h/build/stm32f1xx_it.o
-                0x08007008                BusFault_Handler
+                0x08007018        0x2 /workspaces/h/build/stm32f1xx_it.o
+                0x08007018                BusFault_Handler
  .text.UsageFault_Handler
-                0x0800700a        0x2 /workspaces/h/build/stm32f1xx_it.o
-                0x0800700a                UsageFault_Handler
+                0x0800701a        0x2 /workspaces/h/build/stm32f1xx_it.o
+                0x0800701a                UsageFault_Handler
  .text.SVC_Handler
-                0x0800700c        0x2 /workspaces/h/build/stm32f1xx_it.o
-                0x0800700c                SVC_Handler
+                0x0800701c        0x2 /workspaces/h/build/stm32f1xx_it.o
+                0x0800701c                SVC_Handler
  .text.DebugMon_Handler
-                0x0800700e        0x2 /workspaces/h/build/stm32f1xx_it.o
-                0x0800700e                DebugMon_Handler
+                0x0800701e        0x2 /workspaces/h/build/stm32f1xx_it.o
+                0x0800701e                DebugMon_Handler
  .text.PendSV_Handler
-                0x08007010        0x2 /workspaces/h/build/stm32f1xx_it.o
-                0x08007010                PendSV_Handler
+                0x08007020        0x2 /workspaces/h/build/stm32f1xx_it.o
+                0x08007020                PendSV_Handler
  .text.SysTick_Handler
-                0x08007012        0xc /workspaces/h/build/stm32f1xx_it.o
-                0x08007012                SysTick_Handler
- *fill*         0x0800701e        0x2 
+                0x08007022        0xc /workspaces/h/build/stm32f1xx_it.o
+                0x08007022                SysTick_Handler
+ *fill*         0x0800702e        0x2 
  .text.DMA1_Channel2_IRQHandler
-                0x08007020       0x10 /workspaces/h/build/stm32f1xx_it.o
-                0x08007020                DMA1_Channel2_IRQHandler
- .text.DMA1_Channel3_IRQHandler
                 0x08007030       0x10 /workspaces/h/build/stm32f1xx_it.o
-                0x08007030                DMA1_Channel3_IRQHandler
+                0x08007030                DMA1_Channel2_IRQHandler
+ .text.DMA1_Channel3_IRQHandler
+                0x08007040       0x10 /workspaces/h/build/stm32f1xx_it.o
+                0x08007040                DMA1_Channel3_IRQHandler
  .text.USART3_IRQHandler
-                0x08007040       0x34 /workspaces/h/build/stm32f1xx_it.o
-                0x08007040                USART3_IRQHandler
+                0x08007050       0x34 /workspaces/h/build/stm32f1xx_it.o
+                0x08007050                USART3_IRQHandler
  .text.plook_u8s16_evencka
-                0x08007074       0x1c /workspaces/h/build/BLDC_controller.o
-                0x08007074                plook_u8s16_evencka
+                0x08007084       0x1c /workspaces/h/build/BLDC_controller.o
+                0x08007084                plook_u8s16_evencka
  .text.plook_u8u16_evencka
-                0x08007090       0x1c /workspaces/h/build/BLDC_controller.o
-                0x08007090                plook_u8u16_evencka
+                0x080070a0       0x1c /workspaces/h/build/BLDC_controller.o
+                0x080070a0                plook_u8u16_evencka
  .text.div_nde_s32_floor
-                0x080070ac       0x22 /workspaces/h/build/BLDC_controller.o
-                0x080070ac                div_nde_s32_floor
+                0x080070bc       0x22 /workspaces/h/build/BLDC_controller.o
+                0x080070bc                div_nde_s32_floor
  .text.Counter_Init
-                0x080070ce        0x4 /workspaces/h/build/BLDC_controller.o
-                0x080070ce                Counter_Init
- .text.Counter  0x080070d2       0x1a /workspaces/h/build/BLDC_controller.o
-                0x080070d2                Counter
+                0x080070de        0x4 /workspaces/h/build/BLDC_controller.o
+                0x080070de                Counter_Init
+ .text.Counter  0x080070e2       0x1a /workspaces/h/build/BLDC_controller.o
+                0x080070e2                Counter
  .text.Low_Pass_Filter_Reset
-                0x080070ec        0x8 /workspaces/h/build/BLDC_controller.o
-                0x080070ec                Low_Pass_Filter_Reset
+                0x080070fc        0x8 /workspaces/h/build/BLDC_controller.o
+                0x080070fc                Low_Pass_Filter_Reset
  .text.Low_Pass_Filter
-                0x080070f4       0x5c /workspaces/h/build/BLDC_controller.o
-                0x080070f4                Low_Pass_Filter
+                0x08007104       0x5c /workspaces/h/build/BLDC_controller.o
+                0x08007104                Low_Pass_Filter
  .text.Counter_b_Init
-                0x08007150        0x4 /workspaces/h/build/BLDC_controller.o
-                0x08007150                Counter_b_Init
+                0x08007160        0x4 /workspaces/h/build/BLDC_controller.o
+                0x08007160                Counter_b_Init
  .text.Counter_n
-                0x08007154       0x20 /workspaces/h/build/BLDC_controller.o
-                0x08007154                Counter_n
+                0x08007164       0x20 /workspaces/h/build/BLDC_controller.o
+                0x08007164                Counter_n
  .text.either_edge
-                0x08007174        0xe /workspaces/h/build/BLDC_controller.o
-                0x08007174                either_edge
+                0x08007184        0xe /workspaces/h/build/BLDC_controller.o
+                0x08007184                either_edge
  .text.Debounce_Filter_Init
-                0x08007182       0x16 /workspaces/h/build/BLDC_controller.o
-                0x08007182                Debounce_Filter_Init
+                0x08007192       0x16 /workspaces/h/build/BLDC_controller.o
+                0x08007192                Debounce_Filter_Init
  .text.Debounce_Filter
-                0x08007198       0x8c /workspaces/h/build/BLDC_controller.o
-                0x08007198                Debounce_Filter
+                0x080071a8       0x8c /workspaces/h/build/BLDC_controller.o
+                0x080071a8                Debounce_Filter
  .text.I_backCalc_fixdt_Init
-                0x08007224        0x4 /workspaces/h/build/BLDC_controller.o
-                0x08007224                I_backCalc_fixdt_Init
+                0x08007234        0x4 /workspaces/h/build/BLDC_controller.o
+                0x08007234                I_backCalc_fixdt_Init
  .text.I_backCalc_fixdt_Reset
-                0x08007228        0x8 /workspaces/h/build/BLDC_controller.o
-                0x08007228                I_backCalc_fixdt_Reset
+                0x08007238        0x8 /workspaces/h/build/BLDC_controller.o
+                0x08007238                I_backCalc_fixdt_Reset
  .text.I_backCalc_fixdt
-                0x08007230       0x72 /workspaces/h/build/BLDC_controller.o
-                0x08007230                I_backCalc_fixdt
+                0x08007240       0x72 /workspaces/h/build/BLDC_controller.o
+                0x08007240                I_backCalc_fixdt
  .text.PI_clamp_fixdt_Init
-                0x080072a2        0x6 /workspaces/h/build/BLDC_controller.o
-                0x080072a2                PI_clamp_fixdt_Init
+                0x080072b2        0x6 /workspaces/h/build/BLDC_controller.o
+                0x080072b2                PI_clamp_fixdt_Init
  .text.PI_clamp_fixdt_Reset
-                0x080072a8        0xa /workspaces/h/build/BLDC_controller.o
-                0x080072a8                PI_clamp_fixdt_Reset
- *fill*         0x080072b2        0x2 
+                0x080072b8        0xa /workspaces/h/build/BLDC_controller.o
+                0x080072b8                PI_clamp_fixdt_Reset
+ *fill*         0x080072c2        0x2 
  .text.PI_clamp_fixdt
-                0x080072b4       0xf4 /workspaces/h/build/BLDC_controller.o
-                0x080072b4                PI_clamp_fixdt
+                0x080072c4       0xf4 /workspaces/h/build/BLDC_controller.o
+                0x080072c4                PI_clamp_fixdt
  .text.PI_clamp_fixdt_d_Init
-                0x080073a8        0x6 /workspaces/h/build/BLDC_controller.o
-                0x080073a8                PI_clamp_fixdt_d_Init
+                0x080073b8        0x6 /workspaces/h/build/BLDC_controller.o
+                0x080073b8                PI_clamp_fixdt_d_Init
  .text.PI_clamp_fixdt_b_Reset
-                0x080073ae        0xa /workspaces/h/build/BLDC_controller.o
-                0x080073ae                PI_clamp_fixdt_b_Reset
+                0x080073be        0xa /workspaces/h/build/BLDC_controller.o
+                0x080073be                PI_clamp_fixdt_b_Reset
  .text.PI_clamp_fixdt_l
-                0x080073b8       0xf8 /workspaces/h/build/BLDC_controller.o
-                0x080073b8                PI_clamp_fixdt_l
+                0x080073c8       0xf8 /workspaces/h/build/BLDC_controller.o
+                0x080073c8                PI_clamp_fixdt_l
  .text.PI_clamp_fixdt_f_Init
-                0x080074b0        0x6 /workspaces/h/build/BLDC_controller.o
-                0x080074b0                PI_clamp_fixdt_f_Init
+                0x080074c0        0x6 /workspaces/h/build/BLDC_controller.o
+                0x080074c0                PI_clamp_fixdt_f_Init
  .text.PI_clamp_fixdt_g_Reset
-                0x080074b6        0xa /workspaces/h/build/BLDC_controller.o
-                0x080074b6                PI_clamp_fixdt_g_Reset
+                0x080074c6        0xa /workspaces/h/build/BLDC_controller.o
+                0x080074c6                PI_clamp_fixdt_g_Reset
  .text.PI_clamp_fixdt_k
-                0x080074c0      0x108 /workspaces/h/build/BLDC_controller.o
-                0x080074c0                PI_clamp_fixdt_k
+                0x080074d0      0x108 /workspaces/h/build/BLDC_controller.o
+                0x080074d0                PI_clamp_fixdt_k
  .text.BLDC_controller_step
-                0x080075c8     0x11d8 /workspaces/h/build/BLDC_controller.o
-                0x080075c8                BLDC_controller_step
+                0x080075d8     0x11d8 /workspaces/h/build/BLDC_controller.o
+                0x080075d8                BLDC_controller_step
  .text.BLDC_controller_initialize
-                0x080087a0       0xc0 /workspaces/h/build/BLDC_controller.o
-                0x080087a0                BLDC_controller_initialize
+                0x080087b0       0xc0 /workspaces/h/build/BLDC_controller.o
+                0x080087b0                BLDC_controller_initialize
  .text.Reset_Handler
-                0x08008860       0x4c /workspaces/h/build/startup_stm32f103xb.o
-                0x08008860                Reset_Handler
+                0x08008870       0x4c /workspaces/h/build/startup_stm32f103xb.o
+                0x08008870                Reset_Handler
  .text.Default_Handler
-                0x080088ac        0x2 /workspaces/h/build/startup_stm32f103xb.o
-                0x080088ac                RTC_Alarm_IRQHandler
-                0x080088ac                EXTI2_IRQHandler
-                0x080088ac                TIM1_CC_IRQHandler
-                0x080088ac                PVD_IRQHandler
-                0x080088ac                EXTI3_IRQHandler
-                0x080088ac                EXTI0_IRQHandler
-                0x080088ac                I2C2_EV_IRQHandler
-                0x080088ac                ADC1_2_IRQHandler
-                0x080088ac                SPI1_IRQHandler
-                0x080088ac                TAMPER_IRQHandler
-                0x080088ac                DMA1_Channel4_IRQHandler
-                0x080088ac                RTC_IRQHandler
-                0x080088ac                DMA1_Channel7_IRQHandler
-                0x080088ac                CAN1_RX1_IRQHandler
-                0x080088ac                TIM4_IRQHandler
-                0x080088ac                I2C1_EV_IRQHandler
-                0x080088ac                DMA1_Channel6_IRQHandler
-                0x080088ac                TIM3_IRQHandler
-                0x080088ac                RCC_IRQHandler
-                0x080088ac                TIM1_TRG_COM_IRQHandler
-                0x080088ac                Default_Handler
-                0x080088ac                EXTI15_10_IRQHandler
-                0x080088ac                EXTI9_5_IRQHandler
-                0x080088ac                SPI2_IRQHandler
-                0x080088ac                DMA1_Channel5_IRQHandler
-                0x080088ac                EXTI4_IRQHandler
-                0x080088ac                USB_LP_CAN1_RX0_IRQHandler
-                0x080088ac                USB_HP_CAN1_TX_IRQHandler
-                0x080088ac                TIM1_UP_IRQHandler
-                0x080088ac                WWDG_IRQHandler
-                0x080088ac                TIM2_IRQHandler
-                0x080088ac                TIM1_BRK_IRQHandler
-                0x080088ac                EXTI1_IRQHandler
-                0x080088ac                USART2_IRQHandler
-                0x080088ac                I2C2_ER_IRQHandler
-                0x080088ac                CAN1_SCE_IRQHandler
-                0x080088ac                FLASH_IRQHandler
-                0x080088ac                USART1_IRQHandler
-                0x080088ac                I2C1_ER_IRQHandler
-                0x080088ac                USBWakeUp_IRQHandler
+                0x080088bc        0x2 /workspaces/h/build/startup_stm32f103xb.o
+                0x080088bc                RTC_Alarm_IRQHandler
+                0x080088bc                EXTI2_IRQHandler
+                0x080088bc                TIM1_CC_IRQHandler
+                0x080088bc                PVD_IRQHandler
+                0x080088bc                EXTI3_IRQHandler
+                0x080088bc                EXTI0_IRQHandler
+                0x080088bc                I2C2_EV_IRQHandler
+                0x080088bc                ADC1_2_IRQHandler
+                0x080088bc                SPI1_IRQHandler
+                0x080088bc                TAMPER_IRQHandler
+                0x080088bc                DMA1_Channel4_IRQHandler
+                0x080088bc                RTC_IRQHandler
+                0x080088bc                DMA1_Channel7_IRQHandler
+                0x080088bc                CAN1_RX1_IRQHandler
+                0x080088bc                TIM4_IRQHandler
+                0x080088bc                I2C1_EV_IRQHandler
+                0x080088bc                DMA1_Channel6_IRQHandler
+                0x080088bc                TIM3_IRQHandler
+                0x080088bc                RCC_IRQHandler
+                0x080088bc                TIM1_TRG_COM_IRQHandler
+                0x080088bc                Default_Handler
+                0x080088bc                EXTI15_10_IRQHandler
+                0x080088bc                EXTI9_5_IRQHandler
+                0x080088bc                SPI2_IRQHandler
+                0x080088bc                DMA1_Channel5_IRQHandler
+                0x080088bc                EXTI4_IRQHandler
+                0x080088bc                USB_LP_CAN1_RX0_IRQHandler
+                0x080088bc                USB_HP_CAN1_TX_IRQHandler
+                0x080088bc                TIM1_UP_IRQHandler
+                0x080088bc                WWDG_IRQHandler
+                0x080088bc                TIM2_IRQHandler
+                0x080088bc                TIM1_BRK_IRQHandler
+                0x080088bc                EXTI1_IRQHandler
+                0x080088bc                USART2_IRQHandler
+                0x080088bc                I2C2_ER_IRQHandler
+                0x080088bc                CAN1_SCE_IRQHandler
+                0x080088bc                FLASH_IRQHandler
+                0x080088bc                USART1_IRQHandler
+                0x080088bc                I2C1_ER_IRQHandler
+                0x080088bc                USBWakeUp_IRQHandler
  *(.glue_7)
- .glue_7        0x080088ae        0x0 linker stubs
+ .glue_7        0x080088be        0x0 linker stubs
  *(.glue_7t)
- .glue_7t       0x080088ae        0x0 linker stubs
+ .glue_7t       0x080088be        0x0 linker stubs
  *(.eh_frame)
- *fill*         0x080088ae        0x2 
- .eh_frame      0x080088b0        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
+ *fill*         0x080088be        0x2 
+ .eh_frame      0x080088c0        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
  *(.init)
- .init          0x080088b0        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crti.o
-                0x080088b0                _init
- .init          0x080088b4        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
+ .init          0x080088c0        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crti.o
+                0x080088c0                _init
+ .init          0x080088c4        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
  *(.fini)
- .fini          0x080088bc        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crti.o
-                0x080088bc                _fini
- .fini          0x080088c0        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
-                0x080088c8                        . = ALIGN (0x4)
-                0x080088c8                        _etext = .
+ .fini          0x080088cc        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crti.o
+                0x080088cc                _fini
+ .fini          0x080088d0        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
+                0x080088d8                        . = ALIGN (0x4)
+                0x080088d8                        _etext = .
 
-.vfp11_veneer   0x080088c8        0x0
- .vfp11_veneer  0x080088c8        0x0 linker stubs
+.vfp11_veneer   0x080088d8        0x0
+ .vfp11_veneer  0x080088d8        0x0 linker stubs
 
-.v4_bx          0x080088c8        0x0
- .v4_bx         0x080088c8        0x0 linker stubs
+.v4_bx          0x080088d8        0x0
+ .v4_bx         0x080088d8        0x0 linker stubs
 
-.iplt           0x080088c8        0x0
- .iplt          0x080088c8        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
+.iplt           0x080088d8        0x0
+ .iplt          0x080088d8        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
 
-.rodata         0x080088c8      0x900
-                0x080088c8                        . = ALIGN (0x4)
+.rodata         0x080088d8      0x900
+                0x080088d8                        . = ALIGN (0x4)
  *(.rodata)
  *(.rodata*)
  .rodata.HAL_RCC_GetSysClockFreq.str1.4
-                0x080088c8      0x14d /workspaces/h/build/stm32f1xx_hal_rcc.o
+                0x080088d8      0x14d /workspaces/h/build/stm32f1xx_hal_rcc.o
                                  0x11 (size before relaxing)
- *fill*         0x08008a15        0x3 
+ *fill*         0x08008a25        0x3 
  .rodata.APBPrescTable
-                0x08008a18        0x8 /workspaces/h/build/system_stm32f1xx.o
-                0x08008a18                APBPrescTable
+                0x08008a28        0x8 /workspaces/h/build/system_stm32f1xx.o
+                0x08008a28                APBPrescTable
  .rodata.AHBPrescTable
-                0x08008a20       0x10 /workspaces/h/build/system_stm32f1xx.o
-                0x08008a20                AHBPrescTable
+                0x08008a30       0x10 /workspaces/h/build/system_stm32f1xx.o
+                0x08008a30                AHBPrescTable
  .rodata.Input_Init.str1.4
-                0x08008a30       0x59 /workspaces/h/build/util.o
+                0x08008a40       0x59 /workspaces/h/build/util.o
  .rodata.rtM_Right
-                0x08008a30        0x4 /workspaces/h/build/util.o
-                0x08008a30                rtM_Right
+                0x08008a40        0x4 /workspaces/h/build/util.o
+                0x08008a40                rtM_Right
  .rodata.rtM_Left
-                0x08008a34        0x4 /workspaces/h/build/util.o
-                0x08008a34                rtM_Left
+                0x08008a44        0x4 /workspaces/h/build/util.o
+                0x08008a44                rtM_Left
  .rodata.Vehicle_ServiceTelemetry.str1.4
-                0x08008a38       0xa4 /workspaces/h/build/main.o
+                0x08008a48       0xa4 /workspaces/h/build/main.o
  .rodata.rtConstP
-                0x08008a38      0x790 /workspaces/h/build/BLDC_controller_data.o
-                0x08008a38                rtConstP
+                0x08008a48      0x790 /workspaces/h/build/BLDC_controller_data.o
+                0x08008a48                rtConstP
  .rodata.str1.4
-                0x080091c8       0x13 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf.o)
+                0x080091d8       0x13 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf.o)
  .rodata.str1.4
-                0x080091c8       0x13 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-svfprintf.o)
+                0x080091d8       0x13 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-svfprintf.o)
  .rodata.str1.4
-                0x080091c8       0x25 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf_i.o)
-                0x080091f0                        . = ALIGN (0x4)
+                0x080091d8       0x25 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-nano-vfprintf_i.o)
+                0x08009200                        . = ALIGN (0x4)
 
 .ARM.extab
  *(.ARM.extab* .gnu.linkonce.armextab.*)
 
-.ARM            0x080091c8        0x8
-                0x080091c8                        __exidx_start = .
+.ARM            0x080091d8        0x8
+                0x080091d8                        __exidx_start = .
  *(.ARM.exidx*)
- .ARM.exidx     0x080091c8        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memcpy.o)
-                0x080091d0                        __exidx_end = .
+ .ARM.exidx     0x080091d8        0x8 /usr/lib/gcc/arm-none-eabi/13.2.1/../../../arm-none-eabi/lib/thumb/v7-m/nofp/libc_nano.a(libc_a-memcpy.o)
+                0x080091e0                        __exidx_end = .
 
-.rel.dyn        0x080091d0        0x0
- .rel.iplt      0x080091d0        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
+.rel.dyn        0x080091e0        0x0
+ .rel.iplt      0x080091e0        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
 
-.preinit_array  0x080091d0        0x0
-                0x080091d0                        PROVIDE (__preinit_array_start = .)
+.preinit_array  0x080091e0        0x0
+                0x080091e0                        PROVIDE (__preinit_array_start = .)
  *(.preinit_array*)
-                0x080091d0                        PROVIDE (__preinit_array_end = .)
+                0x080091e0                        PROVIDE (__preinit_array_end = .)
 
-.init_array     0x080091d0        0x4
-                0x080091d0                        PROVIDE (__init_array_start = .)
+.init_array     0x080091e0        0x4
+                0x080091e0                        PROVIDE (__init_array_start = .)
  *(SORT_BY_NAME(.init_array.*))
  *(.init_array*)
- .init_array    0x080091d0        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
-                0x080091d4                        PROVIDE (__init_array_end = .)
+ .init_array    0x080091e0        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
+                0x080091e4                        PROVIDE (__init_array_end = .)
 
-.fini_array     0x080091d4        0x4
-                0x080091d4                        PROVIDE (__fini_array_start = .)
+.fini_array     0x080091e4        0x4
+                0x080091e4                        PROVIDE (__fini_array_start = .)
  *(SORT_BY_NAME(.fini_array.*))
  *(.fini_array*)
- .fini_array    0x080091d4        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
-                0x080091d8                        PROVIDE (__fini_array_end = .)
-                0x080091d8                        _sidata = LOADADDR (.data)
+ .fini_array    0x080091e4        0x4 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
+                0x080091e8                        PROVIDE (__fini_array_end = .)
+                0x080091e8                        _sidata = LOADADDR (.data)
 
-.data           0x20000000      0x1d8 load address 0x080091d8
+.data           0x20000000      0x1d8 load address 0x080091e8
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        _sdata = .
  *(.data)
@@ -2269,17 +2269,17 @@ LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
                 0x200001d8                        _edata = .
 
 .tm_clone_table
-                0x200001d8        0x0 load address 0x080093b0
+                0x200001d8        0x0 load address 0x080093c0
  .tm_clone_table
                 0x200001d8        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
  .tm_clone_table
                 0x200001d8        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtend.o
 
-.igot.plt       0x200001d8        0x0 load address 0x080093b0
+.igot.plt       0x200001d8        0x0 load address 0x080093c0
  .igot.plt      0x200001d8        0x0 /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtbegin.o
                 0x200001d8                        . = ALIGN (0x4)
 
-.bss            0x200001d8      0x8dc load address 0x080093b0
+.bss            0x200001d8      0x8dc load address 0x080093c0
                 0x200001d8                        _sbss = .
                 0x200001d8                        __bss_start__ = _sbss
  *(.bss)
@@ -2534,7 +2534,7 @@ LOAD /usr/lib/gcc/arm-none-eabi/13.2.1/thumb/v7-m/nofp/crtn.o
                 0x20000ab4                        __bss_end__ = _ebss
 
 ._user_heap_stack
-                0x20000ab4      0x604 load address 0x080093b0
+                0x20000ab4      0x604 load address 0x080093c0
                 0x20000ab8                        . = ALIGN (0x8)
  *fill*         0x20000ab4        0x4 
                 0x20000ab8                        PROVIDE (end = .)
