@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AC6925A (QSOP24)引脚网络图</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #121212;
+            overflow: hidden;
+            font-family: 'Consolas', 'Segoe UI', Arial, sans-serif;
+            user-select: none;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #canvas-container:active {
+            cursor: grabbing;
+        }
+        svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .chip-body { fill: #222222; stroke: #383838; stroke-width: 5; rx: 15; ry: 15; }
+        .chip-title { fill: #4DB8FF; font-size: 85px; font-weight: bold; text-anchor: middle; dominant-baseline: central; letter-spacing: 2px;}
+        .chip-subtitle { fill: #aaaaaa; font-size: 42px; text-anchor: middle; dominant-baseline: central; }
+        
+        /* 基础 SVG 样式 */
+        .pin-line { stroke-width: 6; stroke-linecap: round; transition: all 0.2s; }
+        .pin-num { font-size: 30px; font-weight: bold; transition: all 0.2s; } /* 加大引脚数字 */
+        .pin-orig { font-size: 36px; font-weight: bold; transition: all 0.2s; } /* 加大原厂网络名 */
+
+        /* 可编辑标签 HTML 样式 */
+        .macro-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        .left-side .macro-container { justify-content: flex-end; padding-right: 10px; }
+        .right-side .macro-container { justify-content: flex-start; padding-left: 10px; }
+
+        .editable-macro {
+            color: #FFFFFF;
+            font-size: 32px; /* 加大自定义网络文本 */
+            font-weight: bold;
+            font-family: 'Consolas', monospace;
+            padding: 6px 14px;
+            border-radius: 8px;
+            outline: none;
+            max-width: 480px; /* 拓宽最大宽度限制 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border: 2px dashed rgba(255,255,255,0.2);
+            transition: all 0.2s;
+            cursor: text;
+            user-select: text;
+        }
+        .editable-macro:hover {
+            border-color: rgba(255,255,255,0.6);
+            box-shadow: 0 0 8px rgba(255,255,255,0.2);
+        }
+        .editable-macro:focus {
+            border-style: solid;
+            border-color: #ffeb3b !important;
+            background: #000000 !important;
+            color: #ffeb3b !important;
+            box-shadow: 0 0 15px rgba(235, 235, 59, 0.6);
+            max-width: 550px;
+            position: relative;
+            z-index: 999;
+        }
+        .editable-macro:empty::before {
+            content: "+ 定义网络";
+            color: rgba(255,255,255,0.3);
+            font-style: italic;
+            font-size: 26px;
+        }
+
+        /* 搜索高亮状态 */
+        .highlight-line { stroke: #ffeb3b !important; stroke-width: 14 !important; }
+        .highlight-text { fill: #ffeb3b !important; font-size: 42px !important; }
+        .highlight-macro { border-color: #ffeb3b !important; background: #ffeb3b !important; color: #000000 !important; box-shadow: 0 0 15px #ffeb3b;}
+
+        /* 控制台样式 */
+        .center-ui {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            cursor: default;
+        }
+        .center-ui input[type="text"] {
+            background: rgba(15, 15, 15, 0.95);
+            color: #fff;
+            border: 3px solid #444;
+            padding: 15px 25px;
+            border-radius: 40px;
+            font-size: 32px; /* 加大搜索框文字 */
+            width: 85%;
+            outline: none;
+            transition: all 0.3s;
+            text-align: center;
+            font-family: 'Consolas', monospace;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            cursor: text;
+            user-select: text;
+        }
+        .center-ui input[type="text"]:focus {
+            border-color: #4DB8FF;
+            box-shadow: 0 0 25px rgba(77, 184, 255, 0.5);
+        }
+        .slider-container {
+            margin-top: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(15, 15, 15, 0.95);
+            padding: 12px 30px;
+            border-radius: 30px;
+            border: 2px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            width: 90%;
+            box-sizing: border-box;
+        }
+        .slider-container label {
+            color: #bbb;
+            font-size: 22px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 8px;
+            accent-color: #4DB8FF;
+            cursor: pointer;
+        }
+        .reset-btn {
+            background: #4DB8FF;
+            color: #000;
+            border: none;
+            padding: 10px 24px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .reset-btn:hover { background: #2196F3; transform: scale(1.03); }
+        .reset-btn:active { transform: scale(0.97); }
+    </style>
+</head>
+<body>
+
+<div id="canvas-container">
+    <svg id="chip-svg">
+        <g id="transform-group">
+            <rect class="chip-body" x="1400" y="1000" width="1200" height="1280" />
+            
+            <circle cx="1460" cy="1060" r="25" fill="#111" stroke="#333" stroke-width="3"/>
+            
+            <text class="chip-title" x="2000" y="1240">AC6925A</text>
+            <text class="chip-subtitle" x="2000" y="1320">(QSOP24)</text>
+            
+            <foreignObject x="1475" y="1520" width="1050" height="420">
+                <div xmlns="http://www.w3.org/1999/xhtml" class="center-ui" id="chip-ui">
+                    <input type="text" id="searchInput" placeholder="检索引脚 (如: 23, OSCI, PB1)..." oninput="highlightPins()" autocomplete="off">
+                    <div class="slider-container">
+                        <label id="zoomlabel" for="zoomSlider">缩放: 1.000</label>
+                        <input type="range" id="zoomSlider" min="0.1" max="2.5" step="0.001" value="1" oninput="handleSliderZoom(this.value)">
+                        <button onclick="centerAndFit()" class="reset-btn">自适应居中</button>
+                    </div>
+                </div>
+            </foreignObject>
+
+            <g id="pins-container"></g>
+        </g>
+    </svg>
+</div>
+
+<script>
+    const pinData = [
+        { num: 1, orig: "PC5", type: "gpio" },
+        { num: 2, orig: "PC4", type: "gpio" },
+        { num: 3, orig: "PC3", type: "gpio" },
+        { num: 4, orig: "USBDM", type: "usb" },
+        { num: 5, orig: "USBDP", type: "usb" },
+        { num: 6, orig: "PA0/PA4", type: "gpio" },
+        { num: 7, orig: "DACR", type: "audio" },
+        { num: 8, orig: "DACL", type: "audio" },
+        { num: 9, orig: "DACVDD", type: "power" },
+        { num: 10, orig: "VCOM", type: "audio" },
+        { num: 11, orig: "DACVSS", type: "power" },
+        { num: 12, orig: "VDDIO", type: "power" },
+        
+        // 右侧引脚（从下往上逆时针延伸）
+        { num: 13, orig: "PB5", type: "gpio" },
+        { num: 14, orig: "PB4", type: "gpio" },
+        { num: 15, orig: "PB3", type: "gpio" },
+        { num: 16, orig: "PB1", type: "gpio" },
+        { num: 17, orig: "PB0", type: "gpio" },
+        { num: 18, orig: "VBAT", type: "power" },
+        { num: 19, orig: "BT_AVDD", type: "power" },
+        { num: 20, orig: "BT_RF", type: "rf" },
+        { num: 21, orig: "FMIP", type: "rf" },
+        { num: 22, orig: "VSSIO", type: "power" },
+        { num: 23, orig: "BT_OSCI", type: "clock" },
+        { num: 24, orig: "BT_OSCO", type: "clock" }
+    ];
+
+    const themeColors = {
+        gpio:  { text: '#69DB7C', bg: '#2B8A3E' },  
+        usb:   { text: '#66D9E8', bg: '#0C8599' },  
+        audio: { text: '#E599F7', bg: '#862E9C' },  
+        power: { text: '#FF6B6B', bg: '#C92A2A' },  
+        rf:    { text: '#4DABF7', bg: '#1A72E8' },  
+        clock: { text: '#FFA94D', bg: '#E67E22' }   
+    };
+
+    const STORAGE_KEY = "AC6925A_MACRO_STORAGE_V1";
+    let savedMacros = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    
+    /*
+    if(Object.keys(savedMacros).length === 0){
+        savedMacros["23"] = "万用表测通：GD32_PB11?";
+        savedMacros["24"] = "暂悬空(时钟注入验证)";
+    } */
+
+    const svgNS = "http://www.w3.org/2000/svg";
+    const container = document.getElementById('pins-container');
+
+    // 重新精细调整的几何高密度布局核心常数
+    const chipX = 1400;
+    const chipY = 1000;
+    const chipWidth = 1200;
+    
+    const pinLength = 80;     
+    const totalRows = 12;     
+    const startY = chipY + 160; 
+    const rowStep = 85;       // 引脚高度间隔从150极限缩小到85（大幅度提升高密度视觉效果）
+
+    pinData.forEach((pin) => {
+        const isLeft = pin.num <= 12;
+        const rowIndex = isLeft ? (pin.num - 1) : (24 - pin.num);
+        
+        const y = startY + rowIndex * rowStep;
+        const theme = themeColors[pin.type];
+        
+        let x1, x2, innerX, innerAnchor, pinNumX, outerX, sideClass;
+        
+        if (isLeft) {
+            x1 = chipX - pinLength;
+            x2 = chipX;
+            innerX = chipX + 35; // 内部文字稍作右移，适配大字号
+            innerAnchor = "start";
+            pinNumX = chipX - 45; // 硬件引脚号稍向左移，防止与大字体重叠
+            outerX = x1 - 500; // 扩展自定义网络文本的外向宽度空间
+            sideClass = "left-side";
+        } else {
+            x1 = chipX + chipWidth;
+            x2 = chipX + chipWidth + pinLength;
+            innerX = chipX + chipWidth - 35; 
+            innerAnchor = "end";
+            pinNumX = chipX + chipWidth + 45; 
+            outerX = x2 + 10;
+            sideClass = "right-side";
+        }
+
+        // 1. 绘制引脚物理金属线
+        const pinLine = document.createElementNS(svgNS, "line");
+        pinLine.setAttribute("x1", x1); pinLine.setAttribute("y1", y);
+        pinLine.setAttribute("x2", x2); pinLine.setAttribute("y2", y);
+        pinLine.setAttribute("class", "pin-line");
+        pinLine.setAttribute("stroke", theme.text);
+        pinLine.setAttribute("id", `pin-line-${pin.num}`);
+        container.appendChild(pinLine);
+
+        // 2. 绘制原厂引脚网络名称
+        const txtOrig = document.createElementNS(svgNS, "text");
+        txtOrig.setAttribute("x", innerX); txtOrig.setAttribute("y", y);
+        txtOrig.setAttribute("text-anchor", innerAnchor);
+        txtOrig.setAttribute("dominant-baseline", "central");
+        txtOrig.setAttribute("class", "pin-orig");
+        txtOrig.setAttribute("fill", theme.text);
+        txtOrig.setAttribute("id", `pin-orig-${pin.num}`);
+        txtOrig.textContent = pin.orig;
+        container.appendChild(txtOrig);
+
+        // 3. 绘制引脚物理硬件编号
+        const txtNum = document.createElementNS(svgNS, "text");
+        txtNum.setAttribute("x", pinNumX); txtNum.setAttribute("y", y - 16); // 随着字号加大微调上浮偏置
+        txtNum.setAttribute("text-anchor", "middle");
+        txtNum.setAttribute("class", "pin-num");
+        txtNum.setAttribute("fill", "#888");
+        txtNum.setAttribute("id", `pin-num-${pin.num}`);
+        txtNum.textContent = pin.num;
+        container.appendChild(txtNum);
+
+        // 4. 利用 foreignObject 完美挂载 HTML5 contenteditable 可编辑大标签盒
+        const foreignObj = document.createElementNS(svgNS, "foreignObject");
+        foreignObj.setAttribute("x", outerX);
+        foreignObj.setAttribute("y", y - 35); // 增大高度后，使中心轴线对齐引脚 y 点
+        foreignObj.setAttribute("width", "490"); // 拓宽容器，保障大字号长文本显示
+        foreignObj.setAttribute("height", "70");  // 提高高度，防止大字号产生上下裁切现象
+        foreignObj.setAttribute("class", sideClass);
+
+        const macroVal = savedMacros[pin.num] || "";
+        
+        foreignObj.innerHTML = `
+            <div xmlns="http://www.w3.org/1999/xhtml" class="macro-container">
+                <div class="editable-macro" 
+                     id="macro-edit-${pin.num}"
+                     data-pin="${pin.num}"
+                     contenteditable="true" 
+                     style="background: ${theme.bg}; border-color: ${theme.text}"
+                     onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}"
+                     oninput="saveSingleMacro(${pin.num}, this.innerText)">${macroVal}</div>
+            </div>
+        `;
+        
+        container.appendChild(foreignObj);
+    });
+
+    function saveSingleMacro(pinNum, text) {
+        savedMacros[pinNum] = text.trim();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(savedMacros));
+    }
+
+    document.getElementById('pins-container').addEventListener('mousedown', e => {
+        if(e.target.hasAttribute('contenteditable')) e.stopPropagation();
+    });
+    document.getElementById('pins-container').addEventListener('touchstart', e => {
+        if(e.target.hasAttribute('contenteditable')) e.stopPropagation();
+    });
+
+    function highlightPins() {
+        const val = document.getElementById('searchInput').value.toUpperCase().trim();
+        
+        pinData.forEach(pin => {
+            const num = pin.num;
+            const orig = pin.orig.toUpperCase();
+            const currentMacro = (savedMacros[num] || "").toUpperCase();
+            
+            const isMatch = val && (num.toString() === val || orig.includes(val) || currentMacro.includes(val));
+
+            const pinLine = document.getElementById(`pin-line-${num}`);
+            const pinOrig = document.getElementById(`pin-orig-${num}`);
+            const pinNum = document.getElementById(`pin-num-${num}`);
+            const macroElement = document.getElementById(`macro-edit-${num}`);
+
+            if (isMatch) {
+                pinLine.classList.add('highlight-line');
+                pinOrig.classList.add('highlight-text');
+                pinNum.classList.add('highlight-text');
+                if(macroElement) macroElement.classList.add('highlight-macro');
+            } else {
+                pinLine.classList.remove('highlight-line');
+                pinOrig.classList.remove('highlight-text');
+                pinNum.classList.remove('highlight-text');
+                if(macroElement) macroElement.classList.remove('highlight-macro');
+            }
+        });
+    }
+
+    const svgEle = document.getElementById('chip-svg');
+    const transformGroup = document.getElementById('transform-group');
+    const zoomSlider = document.getElementById('zoomSlider');
+    let isPanning = false;
+    let startPoint = { x: 0, y: 0 };
+    let currentPan = { x: 0, y: 0 };
+    let currentScale = 1;
+
+    function updateTransform() {
+        transformGroup.setAttribute('transform', `translate(${currentPan.x}, ${currentPan.y}) scale(${currentScale})`);
+        if(zoomSlider) {
+            zoomSlider.value = currentScale;
+            document.getElementById('zoomlabel').textContent = `缩放: ${Number(currentScale).toFixed(3)}`;
+        }
+    }
+
+    function handleSliderZoom(val) {
+        const newScale = parseFloat(val);
+        const rect = svgEle.getBoundingClientRect();
+        const mouseX = rect.width / 2;
+        const mouseY = rect.height / 2;
+        
+        currentPan.x = mouseX - (mouseX - currentPan.x) * (newScale / currentScale);
+        currentPan.y = mouseY - (mouseY - currentPan.y) * (newScale / currentScale);
+        currentScale = newScale;
+        updateTransform();
+    }
+
+    function centerAndFit() {
+        transformGroup.setAttribute('transform', '');
+        const bbox = transformGroup.getBBox();
+        const rect = svgEle.getBoundingClientRect();
+        
+        const padding = 50;
+        const targetWidth = rect.width - padding * 2;
+        const targetHeight = rect.height ;//- padding * 2;
+        
+        const scaleX = targetWidth / bbox.width;
+        const scaleY = targetHeight / bbox.height;
+        currentScale = Math.min(scaleX, scaleY, 1.5); 
+        
+        const bboxCenterX = bbox.x + bbox.width / 2;
+        const bboxCenterY = bbox.y + bbox.height / 2;
+        
+        currentPan.x = (rect.width / 2) - (bboxCenterX * currentScale);
+        currentPan.y = (rect.height / 2) - (bboxCenterY * currentScale);
+        
+        updateTransform();
+    }
+
+    window.onload = () => { setTimeout(centerAndFit, 30); };
+    window.addEventListener('resize', centerAndFit);
+
+    const chipUi = document.getElementById('chip-ui');
+    ['mousedown', 'touchstart', 'wheel', 'dblclick'].forEach(evt => {
+        chipUi.addEventListener(evt, e => e.stopPropagation());
+    });
+
+    svgEle.addEventListener('mousedown', (e) => {
+        if(e.target.hasAttribute('contenteditable')) return;
+        isPanning = true;
+        startPoint = { x: e.clientX - currentPan.x, y: e.clientY - currentPan.y };
+    });
+    window.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        currentPan.x = e.clientX - startPoint.x;
+        currentPan.y = e.clientY - startPoint.y;
+        updateTransform();
+    });
+    window.addEventListener('mouseup', () => isPanning = false);
+
+    svgEle.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomSensitivity = 0.0012;
+        const delta = e.deltaY * -zoomSensitivity;
+        let newScale = Math.max(0.1, Math.min(3.0, currentScale + delta));
+        
+        const rect = svgEle.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        currentPan.x = mouseX - (mouseX - currentPan.x) * (newScale / currentScale);
+        currentPan.y = mouseY - (mouseY - currentPan.y) * (newScale / currentScale);
+        currentScale = newScale;
+        
+        updateTransform();
+    }, { passive: false });
+</script>
+</body>
+</html>
