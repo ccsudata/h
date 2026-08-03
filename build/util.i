@@ -5666,7 +5666,7 @@ void usart2_rx_check(void)
 
 void usart3_rx_check(void)
 {
-  HAL_Delay(2);
+
 
   static uint32_t old_pos;
   uint32_t pos;
