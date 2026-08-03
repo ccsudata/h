@@ -25,6 +25,8 @@ for tool in arm-none-eabi-gcc arm-none-eabi-objcopy arm-none-eabi-size make; do
         echo "错误：找不到工具: $tool"
         echo "请先安装 ARM 交叉编译工具链："
         echo "  sudo apt-get install build-essential gcc-arm-none-eabi binutils-arm-none-eabi"
+        sudo apt-get update
+        sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi
         exit 1
     fi
 done
