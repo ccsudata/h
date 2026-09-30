@@ -27,7 +27,7 @@ for tool in arm-none-eabi-gcc arm-none-eabi-objcopy arm-none-eabi-size make; do
         echo "  sudo apt-get install build-essential gcc-arm-none-eabi binutils-arm-none-eabi"
         sudo apt-get update
         sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi
-        exit 1
+        #exit 1
     fi
 done
 
